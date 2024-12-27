@@ -21,7 +21,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       playlists
     }, { status: 200 }
     )
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
 }
@@ -29,9 +29,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const data = await request.json()
+    if (!data.name || !data.api_key) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     const newAccount = await createAccount(data)
     return NextResponse.json(newAccount, { status: 201 })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
 }
