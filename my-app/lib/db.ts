@@ -1,5 +1,6 @@
 import sqlite3 from "sqlite3";
 import { open, Database } from 'sqlite'
+import { encrypt, decrypt } from "./crypto";
 
 let db: Database | null = null;
 
@@ -89,11 +90,14 @@ export interface Playlist {
 
 export async function createAccount(data: Omit<Account, 'id' | 'created_at'>): Promise<Account | undefined> {
   const db = await getDb()
+  const encrypted_key = encrypt(data.api_key)
   const result = await db.run(
     `INSERT INTO accounts (name, description, api_key) VALUES (?, ?, ?)`,
-    [data.name, data.description, data.api_key]
+    [data.name, data.description, encrypted_key]
   );
-  return db.get<Account>('SELECT * FROM accounts WHERE id = ?', result.lastID)
+  const account = await db.get<Account>('SELECT * FROM accounts WHERE id = ?', result.lastID)
+  if (account) account.api_key = decrypt(account.api_key)
+  return account
 }
 
 export async function deleteAccount(account_id: number) {
