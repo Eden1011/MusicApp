@@ -31,7 +31,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const data = await request.json()
     if (!data.name || !data.api_key) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     const newAccount = await createAccount(data)
-    return NextResponse.json(newAccount, { status: 201 })
+    return NextResponse.json({ newAccount }, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }

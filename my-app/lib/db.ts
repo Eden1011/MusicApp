@@ -26,6 +26,13 @@ export async function getDb() {
     music_url TEXT NOT NULL,
     thumbnail_url TEXT NOT NULL
     );
+    
+    CREATE TABLE IF NOT EXISTS song_genres (
+    song_id INTEGER NOT NULL,
+    genre TEXT NOT NULL,
+    PRIMARY KEY (song_id, genre),
+    FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE
+    );
 
     CREATE TABLE IF NOT EXISTS playlists (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -79,6 +86,7 @@ export interface Song {
   artist: string,
   music_url: string,
   thumbnail_url: string,
+  genre?: string[]
 }
 
 export interface Playlist {
@@ -111,6 +119,21 @@ export async function createSong(data: Omit<Song, 'id'>) {
     `INSERT INTO songs (title, artist, music_url, thumbnail_url) VALUES (?, ?, ?, ?)`,
     [data.title, data.artist, data.music_url, data.thumbnail_url]
   );
+}
+
+export async function addGenresToSong(song_id: number, genres: string[]) {
+  const db = await getDb()
+  await db.run(`DELETE FROM song_genres WHERE song_id = ?`, song_id)
+  for (const genre of genres) {
+    await db.run(`INSERT INTO song_genres (song_id, genre) VALUES (?, ?)`, [song_id, genre])
+  }
+}
+
+export async function getSongGenres(song_id: number): Promise<string[]> {
+  const db = await getDb()
+  return await db.all<string[]>(
+    `SELECT genre FROM song_genres WHERE song_id = ?`, song_id
+  )
 }
 
 export async function likeSong(account_id: number, song_id: number) {
