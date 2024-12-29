@@ -12,7 +12,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const account = await db.get('SELECT * FROM accounts WHERE email = ?', email);
 
     if (!account) {
-      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+      return NextResponse.json({ success: false }, { status: 404 });
     }
 
     if (password === decrypt(account.password)) {

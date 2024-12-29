@@ -66,7 +66,7 @@ const darkTheme = createTheme({
             backgroundColor: 'rgba(0, 0, 0, 0.2)',
             '&.Mui-focused': {
               '& fieldset': {
-                borderWidth: '2px',
+                borderWidth: '3px',
                 borderColor: blue[500],
               }
             }

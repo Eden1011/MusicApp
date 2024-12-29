@@ -22,6 +22,7 @@ export default function Input() {
       background: 'rgba(20, 20, 20, 0.5)',
       borderWidth: '2px',
       borderColor: 'rgba(30, 30, 30, 0.5)',
+      borderRadius: '25px',
       marginTop: '1rem',
       backdropFilter: 'blur(50px)',
     }}>
