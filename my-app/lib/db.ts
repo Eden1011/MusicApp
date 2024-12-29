@@ -14,6 +14,8 @@ export async function getDb() {
     CREATE TABLE IF NOT EXISTS accounts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
     description TEXT,
     api_key TEXT NOT NULL UNIQUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -75,6 +77,8 @@ export async function getDb() {
 export interface Account {
   id: number,
   name: string,
+  email: string,
+  password: string,
   description?: string,
   api_key: string,
   created_at: string
@@ -99,13 +103,16 @@ export interface Playlist {
 export async function createAccount(data: Omit<Account, 'id' | 'created_at'>): Promise<Account | undefined> {
   const db = await getDb()
   const encrypted_key = encrypt(data.api_key)
+  const encrypted_psswd = encrypt(data.password)
   const result = await db.run(
-    `INSERT INTO accounts (name, description, api_key) VALUES (?, ?, ?)`,
-    [data.name, data.description, encrypted_key]
+    `INSERT INTO accounts (name, email, password, description, api_key) VALUES (?, ?, ?, ?, ?)`,
+    [data.name, data.email, encrypted_psswd, data.description, encrypted_key]
   );
   const account = await db.get<Account>('SELECT * FROM accounts WHERE id = ?', result.lastID)
-  if (account) account.api_key = decrypt(account.api_key)
-  return account
+  if (account) {
+    account.api_key = decrypt(account.api_key)
+    account.password = decrypt(account.password)
+  } return account
 }
 
 export async function deleteAccount(account_id: number) {

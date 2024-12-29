@@ -1,10 +1,9 @@
 "use client"
-import Navbar from "./components/Navbar";
-
+import Navbar from '../components/Navbar';
+import Input from '../components/Input';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import darkTheme from "@/styles/theme";
-
 
 export default function App() {
   return (
@@ -12,6 +11,7 @@ export default function App() {
       <CssBaseline />
       <main>
         <Navbar />
+        <Input />
       </main>
     </ThemeProvider>
   );
