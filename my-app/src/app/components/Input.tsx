@@ -19,10 +19,11 @@ export default function Input() {
   return (
     <Box sx={{
       display: 'flex', gap: 2, p: 1,
-      background: 'rgba(30, 20, 10, 0.5)',
-      borderRadius: '20px',
-      borderColor: 'rgba(60, 50, 40, 0.5)',
-      borderWidth: '2px'
+      background: 'rgba(20, 20, 20, 0.5)',
+      borderWidth: '2px',
+      borderColor: 'rgba(30, 30, 30, 0.5)',
+      marginTop: '1rem',
+      backdropFilter: 'blur(50px)',
     }}>
       <TextField
         value={query}
