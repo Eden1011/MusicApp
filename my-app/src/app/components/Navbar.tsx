@@ -1,9 +1,14 @@
 "use client"
 import { AppBar, Toolbar, Button, Box, ButtonGroup } from '@mui/material';
 import { useRouter } from 'next/navigation';
-
+import { useEffect, useState } from 'react';
 export default function Navbar() {
   const router = useRouter()
+  const [account_id, setAccount_id] = useState<string | undefined>();
+  useEffect(() => {
+    setAccount_id(sessionStorage.getItem('account_id') || undefined)
+  }, [])
+
   return (
     <AppBar position="static"
     >
@@ -17,7 +22,7 @@ export default function Navbar() {
             <Button color="inherit" onClick={() => router.push('/library')}>Library</Button>
             <Button color="inherit" onClick={() => router.push('/discover')}>Discover</Button>
             <Button color="inherit" onClick={() => router.push('/chat')}>Chat</Button>
-            {!sessionStorage.getItem('account_id') ?
+            {!account_id ?
               <Button color="inherit" onClick={() => router.push('/login')}
                 sx={{
                   width: '5rem',

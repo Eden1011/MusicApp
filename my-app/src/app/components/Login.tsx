@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { TextField, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import { red } from '@mui/material/colors';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export default function Login() {
       console.log('Account created');
       sessionStorage.setItem('account_id', data.newAccount.id);
       sessionStorage.setItem('account_email', email);
-      router.push('/')
+      router.push('/search')
     }
   }
   const login = async () => {
@@ -40,7 +41,7 @@ export default function Login() {
       console.log('Logged in successfully');
       sessionStorage.setItem('account_id', data.account_id);
       sessionStorage.setItem('account_email', email);
-      router.push('/')
+      router.push('/search')
     }
   }
 
@@ -61,35 +62,76 @@ export default function Login() {
       height: '100vh',
       gap: '20px'
     }}>
+
+      <p className='italic text-gray-500 font-bold'>Log in:</p>
       <TextField
-        placeholder="Email"
+        placeholder="Email (*)"
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            ...(email === '' && {
+              '&.Mui-focused fieldset': {
+                borderColor: 'red',
+                borderWidth: '2px',
+                boxShadow: '0 0 5px rgba(255, 0, 0, 0.5)'
+              }
+            })
+          }
+        }}
+
       />
       <TextField
-        placeholder="Password"
+        placeholder="Password (*)"
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            ...(password === '' && {
+              '&.Mui-focused fieldset': {
+                borderColor: 'red',
+                borderWidth: '2px',
+                boxShadow: '0 0 5px rgba(255, 0, 0, 0.5)'
+              }
+            })
+          }
+        }}
       />
 
 
-      <p className='mt-1'>Input fields below if trying to sign up.</p>
+      <p className='mt-1 italic text-gray-500 font-bold'>Sign up:</p>
       <TextField
-        placeholder="Name"
-        type="name"
+        placeholder="Name (?)"
+        type="username"
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
 
       <TextField
-        placeholder="API Key"
+        placeholder="API Key (?)"
         type="password"
         value={api_key}
         onChange={(e) => setApi_key(e.target.value)}
       />
-      <Button variant='contained' onClick={handleAction}>
+      <Button variant='contained' onClick={handleAction}
+        sx={{
+          transition: 'all 0.3s ease-in-out, box-shadow 0.2s ease-in-out',
+          ...((email === '' || password === '') && {
+            backgroundColor: 'red',
+            '&:hover': {
+              backgroundColor: red[600],
+            },
+            '&:active': {
+              backgroundColor: red[700],
+              boxShadow: '0 0 20px 10px rgba(255, 0, 0, 0.5)',
+            }
+          })
+        }}
+
+
+      >
         Proceed
       </Button>
     </div >
