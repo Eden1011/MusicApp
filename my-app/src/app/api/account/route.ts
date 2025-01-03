@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, createAccount, getLikedSongs, getAccountPlaylists, Account } from "../../../../lib/db";
+import { getDb, createAccount, getLikedSongs, getAccountPlaylists, deleteAccount, Account } from "../../../../lib/db";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
@@ -36,5 +36,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ newAccount }, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    if (!id) return NextResponse.json({ error: "Provide ID" }, { status: 400 });
+
+    await deleteAccount(parseInt(id));
+    return NextResponse.json({ message: 'Account deleted' }, { status: 200 });
+  } catch {
+    return NextResponse.json({ error: 'Database error' }, { status: 500 });
   }
 }

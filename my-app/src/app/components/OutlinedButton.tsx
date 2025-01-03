@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 
 interface OutlinedButtonProps {
   value: string;
-  onClick: () => void;
+  onClick: any;
 }
 
 export default function OutlinedButton({ value, onClick }: OutlinedButtonProps) {

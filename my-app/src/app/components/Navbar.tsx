@@ -1,23 +1,35 @@
 "use client"
-import { AppBar, Toolbar, Button, Box, ButtonGroup } from '@mui/material';
+import { AppBar, Toolbar, Button, Box, ButtonGroup, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
 export default function Navbar() {
   const router = useRouter()
   const [account_id, setAccount_id] = useState<string | undefined>();
+
   useEffect(() => {
     setAccount_id(sessionStorage.getItem('account_id') || undefined)
   }, [])
 
   return (
-    <AppBar position="static"
-    >
+    <AppBar position="static">
       <Toolbar>
-        <Box sx={{
-          marginLeft: 'auto',
-        }}>
-          <ButtonGroup variant='text'
-          >
+        <Typography
+          variant="h6"
+          component="div"
+          onClick={() => router.push('/')}
+          sx={{
+            cursor: 'pointer',
+            fontStyle: 'italic',
+            '&:hover': {
+              opacity: 0.8
+            }
+          }}
+        >
+          Projekt
+        </Typography>
+        <Box sx={{ marginLeft: 'auto' }}>
+          <ButtonGroup variant='text'>
             <Button color="inherit" onClick={() => router.push('/search')}>Search</Button>
             <Button color="inherit" onClick={() => router.push('/library')}>Library</Button>
             <Button color="inherit" onClick={() => router.push('/discover')}>Discover</Button>
@@ -62,13 +74,10 @@ export default function Navbar() {
                   }
                 }}
               > Account </Button>
-
-
             }
-
           </ButtonGroup>
         </Box>
       </Toolbar>
-    </AppBar >
+    </AppBar>
   );
 }

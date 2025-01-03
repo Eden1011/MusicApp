@@ -20,8 +20,6 @@ export default function BoxYoutubeError({ data }: { data: any }) {
           textAlign: 'center'
         }}>
           {data.error.message}
-          <br />
-          Proceed to account settings.
         </Typography>
       </Box>
     );
