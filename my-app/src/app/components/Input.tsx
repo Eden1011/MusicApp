@@ -16,10 +16,15 @@ export default function Input() {
     setNumber(value);
   };
 
+
+  const urlencode = (data: string): string => {
+    return encodeURIComponent(data.replace(/ /g, '+'))
+  }
+
   const handleSubmit = () => {
     setQuery(query)
     setNumber(number)
-    if (query) router.push(`/search/${encodeURIComponent(query)}?maxResults=${number || 5}`)
+    if (query) router.push(`/search/${urlencode(query)}?maxResults=${number || 5}`)
   };
 
   return (

@@ -7,13 +7,60 @@ import { use, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import BoxYoutubeError from '@/app/components/BoxYoutubeError';
 import CallsLeft from '@/app/components/CallsLeft';
+import StackSearchResults from '@/app/components/StackSearchResults';
 
+interface YouTubeVideoId {
+  kind: string;
+  videoId: string;
+}
 
-const parseYoutubeData = (data: any) => {
+interface YouTubeThumbnail {
+  url: string;
+  width: number;
+  height: number;
+}
+
+interface YouTubeSnippet {
+  title: string;
+  channelTitle: string;
+  thumbnails: {
+    default: YouTubeThumbnail;
+  };
+}
+
+interface YouTubeItem {
+  id: YouTubeVideoId;
+  snippet: YouTubeSnippet;
+}
+
+interface YouTubeApiResponse {
+  data?: {
+    items: YouTubeItem[];
+  };
+  error?: string;
+}
+
+interface ParsedVideoData {
+  videoId: string;
+  title: string;
+  channelTitle: string;
+  thumbnailUrl: string;
+}
+
+interface SearchQueryPageProps {
+  params: {
+    query: string;
+  };
+  searchParams: {
+    maxResults?: string;
+  };
+}
+
+const parseYoutubeData = (data: YouTubeApiResponse): ParsedVideoData[] => {
   if (!data?.data?.items) return [];
 
   return data.data.items
-    .filter(item => item.id?.kind === "youtube#video")
+    .filter((item): item is YouTubeItem => item.id?.kind === "youtube#video")
     .map(item => ({
       videoId: item.id.videoId,
       title: item.snippet.title,
@@ -22,25 +69,17 @@ const parseYoutubeData = (data: any) => {
     }));
 };
 
-function CallSuccess(data: any) {
-  const parsed = parseYoutubeData(data)
-  return (
-    <>
-      <CallsLeft />
-      <div>
-        {JSON.stringify(parsed)}
-      </div>
-    </>
-  )
-}
 
-export default function SearchQueryPage({ params, searchParams }: { params: any, searchParams: any }) {
-  let { maxResults: number } = use(searchParams)
-  const { query } = use(params)
-  const [youtubeData, setYoutubeData] = useState(null);
+export default function SearchQueryPage({ params, searchParams }: SearchQueryPageProps) {
+  const { maxResults } = use(searchParams);
+  const { query } = use(params);
+  const [youtubeData, setYoutubeData] = useState<YouTubeApiResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const number = maxResults ? parseInt(maxResults) : 5;
 
   useEffect(() => {
     const call_youtube = async () => {
+      setIsLoading(true)
       try {
         const account_id = sessionStorage.getItem('account_id');
         const api_key = sessionStorage.getItem('account_api');
@@ -48,23 +87,23 @@ export default function SearchQueryPage({ params, searchParams }: { params: any,
         if (!account_id || !api_key) {
           throw new Error('Missing authentication data');
         }
-        if (!number) number = 5
-        const response = await fetch(`/api/youtube/search?account_id=${account_id}&api_key=${api_key}&query=${query}&max_results=${number}`);
 
+        const response = await fetch(`/api/youtube/search?account_id=${account_id}&api_key=${api_key}&query=${query}&max_results=${number}`);
 
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to fetch data');
         }
-        const data = await response.json();
+        const data: YouTubeApiResponse = await response.json();
         setYoutubeData(data);
-
 
         const callsLeft = parseInt(sessionStorage.getItem('calls_left') || '0');
         sessionStorage.setItem('calls_left', (callsLeft - number).toString());
 
       } catch (err) {
         console.error('Error fetching YouTube data:', err);
+      } finally {
+        setIsLoading(false)
       }
     };
 
@@ -72,6 +111,33 @@ export default function SearchQueryPage({ params, searchParams }: { params: any,
       call_youtube();
     }
   }, [number, query]);
+
+
+  function CallSuccess(data: YouTubeApiResponse) {
+    const parsed: ParsedVideoData[] = parseYoutubeData(data)
+    if (parsed.length === 0) {
+      return (
+        <>
+          <BoxYoutubeError data={
+            {
+              error:
+              {
+                message: "Could not find any results. Maybe the key or query is faulty?"
+              }
+            }}
+          />
+        </>
+      )
+    }
+
+    return (
+      <>
+        <CallsLeft />
+        <StackSearchResults amount={number} data={parsed} isLoading={isLoading} />
+      </>
+    )
+  }
+
 
   return (
     <ThemeProvider theme={darkTheme}>
