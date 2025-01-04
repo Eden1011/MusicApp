@@ -113,9 +113,9 @@ export default function SearchQueryPage({ params, searchParams }: SearchQueryPag
   }, [number, query]);
 
 
-  function CallSuccess(data: YouTubeApiResponse) {
+  function CallSuccess(data: YouTubeApiResponse, isLoading: boolean) {
     const parsed: ParsedVideoData[] = parseYoutubeData(data)
-    if (parsed.length === 0) {
+    if (parsed.length === 0 && isLoading === false) {
       return (
         <>
           <BoxYoutubeError data={
@@ -127,6 +127,11 @@ export default function SearchQueryPage({ params, searchParams }: SearchQueryPag
             }}
           />
         </>
+      )
+    }
+    else if (parsed.length === 0) {
+      return (
+        <StackSearchResults amount={number} data={parsed} isLoading={isLoading} />
       )
     }
 
@@ -146,7 +151,7 @@ export default function SearchQueryPage({ params, searchParams }: SearchQueryPag
         <Navbar />
         <Box sx={{ p: 3 }}>
           {
-            youtubeData?.error ? BoxYoutubeError(youtubeData) : CallSuccess(youtubeData)
+            youtubeData?.error ? BoxYoutubeError(youtubeData) : CallSuccess(youtubeData, isLoading)
           }
         </Box>
       </main>

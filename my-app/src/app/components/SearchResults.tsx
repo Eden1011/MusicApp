@@ -1,5 +1,6 @@
 import { Box, Button } from "@mui/material"
 import OutlinedButton from "./OutlinedButton";
+import { useRouter } from "next/navigation";
 
 
 export interface SearchResultProps {
@@ -11,6 +12,7 @@ export interface SearchResultProps {
 
 
 export default function SearchResult({ result }: { result: SearchResultProps }) {
+  const router = useRouter()
   return (
     <Box
       sx={{
@@ -66,7 +68,7 @@ export default function SearchResult({ result }: { result: SearchResultProps }) 
           paddingTop: 2
         }}
       >
-        <Button variant="contained" color="primary">Watch</Button>
+        <Button variant="contained" color="primary" onClick={() => router.push(`/watch/${result.videoId}`)}>Watch</Button>
         <OutlinedButton value="Add to playlist" onClick={() => 1} />
         <OutlinedButton value="Add to library" onClick={() => 1} />
       </Box>

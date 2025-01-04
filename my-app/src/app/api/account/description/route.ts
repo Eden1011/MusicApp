@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Account, getDb } from "../../../../../lib/db";
+import { urldecode } from "../../../../../lib/urlfunctions";
 
 export async function PATCH(request: NextRequest): Promise<NextResponse> {
   try {
@@ -13,10 +14,10 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     const account = await db.get<Account>(`SELECT * FROM accounts WHERE id = ?`, id);
     if (!account) return NextResponse.json({ error: "Account not found" }, { status: 404 });
 
-    await db.run('UPDATE accounts SET description = ? WHERE id = ?', [description, id]);
+    await db.run('UPDATE accounts SET description = ? WHERE id = ?', [urldecode(description), id]);
 
     const updatedAccount = await db.get<Account>('SELECT * FROM accounts WHERE id = ?', id);
-    return NextResponse.json(updatedAccount, { status: 200 });
+    return NextResponse.json({ updatedAccount }, { status: 200 });
   } catch {
     return NextResponse.json({ error: 'Database error' }, { status: 500 });
   }

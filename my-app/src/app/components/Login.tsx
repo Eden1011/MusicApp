@@ -6,7 +6,7 @@ import { red } from '@mui/material/colors';
 import BoxYoutubeError from './BoxYoutubeError';
 
 export default function Login() {
-  const [err, setErr] = useState(false)
+  const [err, setErr] = useState('')
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('')
@@ -30,8 +30,10 @@ export default function Login() {
       sessionStorage.setItem('account_id', data.newAccount.id);
       sessionStorage.setItem('account_email', email);
       router.push('/search')
-    }
+    } else setErr("Could not sign up - account exists.")
   }
+
+
   const login = async () => {
     const response = await fetch('/api/login', {
       method: 'POST',
@@ -45,11 +47,11 @@ export default function Login() {
       sessionStorage.setItem('account_email', email);
       router.push('/search')
     }
-    else setErr(true)
+    else setErr("Could not find account")
   }
 
   const handleAction = async () => {
-    if (name !== '' && api_key !== '') {
+    if (email && password && name && api_key) {
       await signup()
     } else {
       await login()
@@ -60,7 +62,7 @@ export default function Login() {
     <>
       {err ? (
         <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50">
-          <BoxYoutubeError data={{ error: { message: 'Account not found' } }} />
+          <BoxYoutubeError data={{ error: { message: err } }} />
         </div>
       ) : ''}
       <div style={{

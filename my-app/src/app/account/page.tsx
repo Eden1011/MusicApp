@@ -9,6 +9,7 @@ import Intermission from '../components/Intermission';
 import BoxYoutubeError from '../components/BoxYoutubeError';
 import DeleteButton from '../components/DeleteButton';
 import { red } from '@mui/material/colors';
+import { urlencode } from '../../../lib/urlfunctions';
 
 function AccountInfo() {
   const [accountId, setAccountId] = useState(0)
@@ -16,6 +17,7 @@ function AccountInfo() {
   const [accountData, setAccountData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [desc, setDesc] = useState<string | undefined>('')
 
   useEffect(() => {
     const fetchAccountData = async () => {
@@ -54,9 +56,27 @@ function AccountInfo() {
       });
 
       if (!response.ok) throw new Error('Failed to update API key');
+      const { updatedAccount } = await response.json();
+
+      sessionStorage.setItem('account_api', updatedAccount.api_key)
+    } catch (error) {
+      console.error('Error updating API key:', error);
+    }
+  }
+
+  async function handleDescChange() {
+    if (!desc) return;
+    try {
+      const response = await fetch(`/api/account/description?id=${accountId}&description=${urlencode(desc)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      if (!response.ok) throw new Error('Failed to update description');
 
       const { updatedAccount } = await response.json();
-      sessionStorage.setItem('account_api', updatedAccount.api_key)
+      setDesc(updatedAccount.description)
+
+
     } catch (error) {
       console.error('Error updating API key:', error);
     }
@@ -113,7 +133,15 @@ function AccountInfo() {
                         borderWidth: '2px',
                         boxShadow: '0 0 5px rgba(255, 0, 0, 0.5)'
                       }
+                    }),
+                    ...(api_key.length === 39 && {
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'green',
+                        borderWidth: '2px',
+                        boxShadow: '0 0 5px rgba(0, 255, 0, 0.5)'
+                      }
                     })
+
                   }
                 }}
 
@@ -132,10 +160,35 @@ function AccountInfo() {
                       backgroundColor: red[700],
                       boxShadow: '0 0 20px 10px rgba(255, 0, 0, 0.5)',
                     }
+                  }),
+                  ...(api_key.length === 39 && {
+                    backgroundColor: 'green',
+                    '&:hover': {
+                      backgroundColor: 'green',
+                    },
+                    '&:active': {
+                      backgroundColor: 'green',
+                      boxShadow: '0 0 20px 2px rgba(0, 255, 0, 0.5)',
+                    }
                   })
                 }}
-
               >
+                Change
+              </Button>
+            </Box>
+          </Box>
+          <Box>
+            <Typography variant="body2">Description:</Typography>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
+              <TextField
+                fullWidth
+                placeholder={`Description: "${accountData.account.description}"` || 'No description'}
+                type="text"
+                onChange={(e) => setDesc(e.target.value)}
+              />
+              <Button variant='contained'
+                onClick={handleDescChange}
+                sx={{ height: '50px' }}>
                 Change
               </Button>
             </Box>
@@ -161,8 +214,8 @@ function AccountInfo() {
               </Typography>
             </Box>
           </Box>
-        </Stack>
-      </Box>
+        </Stack >
+      </Box >
       <Box sx={{
         display: 'flex',
         justifyContent: 'space-between',

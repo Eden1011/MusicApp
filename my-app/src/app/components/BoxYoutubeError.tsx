@@ -10,6 +10,7 @@ export default function BoxYoutubeError({ data }: { data: any }) {
         borderColor: 'rgba(90, 30, 30, 0.8)',
         borderRadius: '25px',
         marginTop: '1rem',
+        marginBottom: '1rem',
         backdropFilter: 'blur(50px)',
         alignSelf: 'flex-start',
         width: 'fit-content',

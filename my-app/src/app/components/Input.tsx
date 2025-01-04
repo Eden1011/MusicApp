@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { red } from '@mui/material/colors';
 
+import { urlencode } from '../../../lib/urlfunctions'
+
 export default function Input() {
   useAccountApi()
   const [query, setQuery] = useState('');
@@ -17,9 +19,6 @@ export default function Input() {
   };
 
 
-  const urlencode = (data: string): string => {
-    return encodeURIComponent(data.replace(/ /g, '+'))
-  }
 
   const handleSubmit = () => {
     setQuery(query)
