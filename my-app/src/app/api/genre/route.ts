@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, getSongGenres } from "../../../../lib/db";
+import { urldecode } from "../../../../lib/urlfunctions";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const songs = await db.all(`
      SELECT * FROM songs
      JOIN song_genres ON songs.id = song_genres.song_id
-     WHERE song_genres.genre = ?`, genre)
+     WHERE song_genres.genre = ?`, urldecode(genre))
 
     for (const song of songs) {
       song.genre = await getSongGenres(song.id)

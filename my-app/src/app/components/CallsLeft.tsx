@@ -12,19 +12,17 @@ export default function CallsLeft() {
   if (callsLeft) return (
     <Box
       sx={{
-        display: "flex",
-        gap: 2,
-        p: 1,
-        background: "rgba(20, 70, 20, 0.5)",
-        borderWidth: "2px",
-        borderColor: "rgba(30, 100, 30, 0.9)",
-        borderRadius: "25px",
-        marginTop: "1rem",
-        backdropFilter: "blur(50px)",
-        alignSelf: "flex-start",
-        width: "fit-content",
-        mx: "auto",
-        marginBottom: '1rem'
+        display: 'flex', gap: 2, p: 1,
+        background: 'rgba(0, 90, 20, 0.5)',
+        borderWidth: '3px',
+        borderColor: 'rgba(0, 100, 30, 0.8)',
+        borderRadius: '25px',
+        marginTop: '1rem',
+        marginBottom: '1rem',
+        backdropFilter: 'blur(50px)',
+        alignSelf: 'flex-start',
+        width: 'fit-content',
+        mx: 'auto',
       }}
     >
       <Typography color="white">

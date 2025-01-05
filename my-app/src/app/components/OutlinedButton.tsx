@@ -7,7 +7,9 @@ interface OutlinedButtonProps {
 
 export default function OutlinedButton({ value, onClick }: OutlinedButtonProps) {
   return (
-    <Button variant="outlined" onClick={onClick}
+    <Button
+      key={`btn-${value[0]}`}
+      variant="outlined" onClick={onClick}
       sx={{
         transition: 'all 0.5s ease-in',
         '&:hover': {

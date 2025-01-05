@@ -25,7 +25,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
     await createSong(data)
-    return NextResponse.json({ message: 'Created song' }, { status: 201 })
+    return NextResponse.json({ message: 'Created song', data: data }, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }

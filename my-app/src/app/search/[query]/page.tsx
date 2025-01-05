@@ -8,6 +8,7 @@ import { Box } from '@mui/material';
 import BoxYoutubeError from '@/app/components/BoxYoutubeError';
 import CallsLeft from '@/app/components/CallsLeft';
 import StackSearchResults from '@/app/components/StackSearchResults';
+import Intermission from '@/app/components/Intermission';
 
 interface YouTubeVideoId {
   kind: string;
@@ -41,7 +42,7 @@ interface YouTubeApiResponse {
 }
 
 interface ParsedVideoData {
-  videoId: string;
+  musicUrl: string;
   title: string;
   channelTitle: string;
   thumbnailUrl: string;
@@ -62,7 +63,7 @@ const parseYoutubeData = (data: YouTubeApiResponse): ParsedVideoData[] => {
   return data.data.items
     .filter((item): item is YouTubeItem => item.id?.kind === "youtube#video")
     .map(item => ({
-      videoId: item.id.videoId,
+      musicUrl: item.id.videoId,
       title: item.snippet.title,
       channelTitle: item.snippet.channelTitle,
       thumbnailUrl: item.snippet.thumbnails.default.url
@@ -90,12 +91,15 @@ export default function SearchQueryPage({ params, searchParams }: SearchQueryPag
 
         const response = await fetch(`/api/youtube/search?account_id=${account_id}&api_key=${api_key}&query=${query}&max_results=${number}`);
 
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to fetch data');
         }
         const data: YouTubeApiResponse = await response.json();
         setYoutubeData(data);
+        console.log(data);
+
 
         const callsLeft = parseInt(sessionStorage.getItem('calls_left') || '0');
         sessionStorage.setItem('calls_left', (callsLeft - number).toString());
@@ -131,10 +135,13 @@ export default function SearchQueryPage({ params, searchParams }: SearchQueryPag
     }
     else if (parsed.length === 0) {
       return (
-        <StackSearchResults amount={number} data={parsed} isLoading={isLoading} />
+        <>
+          <Intermission />
+          <StackSearchResults amount={number} data={parsed} isLoading={isLoading} />
+        </>
+
       )
     }
-
     return (
       <>
         <CallsLeft />
@@ -149,11 +156,9 @@ export default function SearchQueryPage({ params, searchParams }: SearchQueryPag
       <CssBaseline />
       <main>
         <Navbar />
-        <Box sx={{ p: 3 }}>
-          {
-            youtubeData?.error ? BoxYoutubeError(youtubeData) : CallSuccess(youtubeData, isLoading)
-          }
-        </Box>
+        {
+          youtubeData?.error ? BoxYoutubeError(youtubeData) : CallSuccess(youtubeData, isLoading)
+        }
       </main>
     </ThemeProvider>
   );

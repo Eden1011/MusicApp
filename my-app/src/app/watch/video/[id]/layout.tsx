@@ -1,4 +1,4 @@
-export default function WatchLayout({
+export default function VideoLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

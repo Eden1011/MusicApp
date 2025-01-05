@@ -3,11 +3,12 @@ import Navbar from '@/app/components/Navbar';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import darkTheme from "@/styles/theme";
-import { use } from 'react';
+import { use, useEffect } from 'react';
 import YouTube from 'react-youtube';
 import { useState, useRef } from 'react';
-import { Box, Slider, IconButton, Paper } from '@mui/material';
+import { Box, Slider, IconButton, Paper, TextField, Button } from '@mui/material';
 import { PlayArrow, Pause, VolumeUp, VolumeOff } from '@mui/icons-material';
+import { urldecode } from '../../../../../lib/urlfunctions';
 
 interface WatchPageSearchParams {
   params: {
@@ -15,14 +16,16 @@ interface WatchPageSearchParams {
   }
 }
 
-export default function Watch({ params }: WatchPageSearchParams) {
+export default function Video({ params }: WatchPageSearchParams) {
   const { id } = use(params);
-
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [genre, setGenre] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
+  const [channelTitle, setChannelTitle] = useState('');
 
   const playerRef = useRef<any>(null);
 
@@ -38,8 +41,52 @@ export default function Watch({ params }: WatchPageSearchParams) {
   const handleReady = (event: any) => {
     playerRef.current = event.target;
     setDuration(event.target.getDuration());
+
+    setVideoTitle(event.target.getVideoData().title);
+    setChannelTitle(event.target.getVideoData().author);
   };
 
+  const handleAddSong = async () => {
+    const songData = {
+      title: videoTitle,
+      artist: channelTitle,
+      music_url: urldecode(id),
+      thumbnail_url: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
+    };
+    try {
+      const response = await fetch('/api/songs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(songData),
+      });
+
+      if (response.ok) {
+        const songResponse = await response.json();
+        console.log(songResponse);
+        console.log('to bylo rong response');
+
+
+        if (genre) {
+          await fetch('/api/songs', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: songResponse.id,
+              genres: [genre]
+            }),
+          });
+        }
+        setGenre('');
+      }
+    } catch (error) {
+      console.error('Error adding song:', error);
+      alert('Error adding song');
+    }
+  };
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -71,7 +118,6 @@ export default function Watch({ params }: WatchPageSearchParams) {
     playerRef.current?.seekTo(timeValue);
     setCurrentTime(timeValue);
   };
-
 
   const handleStateChange = (event: any) => {
     const playerState = event.data;
@@ -126,6 +172,22 @@ export default function Watch({ params }: WatchPageSearchParams) {
                   min={0}
                   max={100}
                 />
+
+                <Box sx={{ marginLeft: 'auto', display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <TextField
+                    size="small"
+                    placeholder="Enter genre"
+                    value={genre}
+                    onChange={(e) => setGenre(e.target.value)}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleAddSong}
+                    sx={{ height: '40px' }}
+                  >
+                    Add to Database
+                  </Button>
+                </Box>
               </Box>
             </Box>
           </Paper>

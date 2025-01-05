@@ -4,7 +4,6 @@ import { Box, TextField, Button } from '@mui/material';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { red } from '@mui/material/colors';
-
 import { urlencode } from '../../../lib/urlfunctions'
 
 export default function Input() {
