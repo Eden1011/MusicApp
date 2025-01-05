@@ -2,7 +2,6 @@ import { Box, Typography, Stack, Button, StackProps, BoxProps } from '@mui/mater
 import { useRouter } from 'next/navigation';
 import OutlinedButton from './OutlinedButton';
 import BoxBackground from './BoxBackground';
-import { ReactNode } from 'react';
 
 
 function LandingStack() {
@@ -36,6 +35,7 @@ function BottomLandingNavigationButtons() {
     mx: 'auto'
   }}>
     <OutlinedButton value="Search" onClick={() => router.push('/search')} />
+    <OutlinedButton value="Watch" onClick={() => router.push('/watch')} />
     <OutlinedButton value="Library" onClick={() => router.push('/library')} />
     <OutlinedButton value="Discover" onClick={() => router.push('/discover')} />
     <OutlinedButton value="Chat" onClick={() => router.push('/chat')} />

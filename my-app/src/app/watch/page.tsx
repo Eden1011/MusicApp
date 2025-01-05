@@ -49,28 +49,44 @@ function StackGenres() {
       </Button>
       {genres.map((genre, index) => {
         const rainbowColors = [
-          '#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'
+          '#FF3333', '#FF6633', '#FF9933', '#FFCC33', '#FFFF33', '#CCFF33', '#99FF33',
+          '#66FF33', '#33FF33', '#33FF66', '#33FF99', '#33FFCC', '#33FFFF', '#33CCFF',
+          '#3399FF', '#3366FF', '#3333FF', '#6633FF', '#9933FF', '#CC33FF', '#FF33FF'
         ];
         const colorIndex = index % rainbowColors.length;
         const buttonColor = rainbowColors[colorIndex];
         return (
           <Button
             key={genre}
-            variant="contained"
+            variant='outlined'
             onClick={() => router.push(`watch/genre/${urlencode(genre)}`)}
             sx={{
-              backgroundColor: buttonColor,
+              borderColor: buttonColor,
+              color: buttonColor,
+              transition: 'all 0.3s ease-in-out',
+              '& .MuiTypography-root': {
+                transition: 'color 0.3s ease-in-out',
+              },
               '&:hover': {
                 backgroundColor: buttonColor,
-                filter: 'brightness(0.8)'
+                '& .MuiTypography-root': {
+                  color: 'black',
+                }
+              },
+              '&:active, &.Mui-focused': {
+                backgroundColor: buttonColor,
+                boxShadow: `0 0 15px ${buttonColor}`,
+                '& .MuiTypography-root': {
+                  color: 'black',
+                }
               }
             }}
           >
-            {genre}
+            <Typography>{genre}</Typography>
           </Button>
         );
       })}
-    </Stack>
+    </Stack >
   )
 }
 

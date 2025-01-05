@@ -64,27 +64,26 @@ export default function Video({ params }: WatchPageSearchParams) {
 
       if (response.ok) {
         const songResponse = await response.json();
-        console.log(songResponse);
-        console.log('to bylo rong response');
-
-
         if (genre) {
-          await fetch('/api/songs', {
+          const array = [...new Set(genre.trim().split(/\s+/).map(g => g.toLowerCase()))];
+
+          const addGenre = await fetch('/api/songs', {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              id: songResponse.id,
-              genres: [genre]
+              id: songResponse.song.id,
+              genres: array
             }),
           });
+          await addGenre.json()
         }
         setGenre('');
       }
     } catch (error) {
-      console.error('Error adding song:', error);
-      alert('Error adding song');
+      console.log(error);
+
     }
   };
 
@@ -173,26 +172,51 @@ export default function Video({ params }: WatchPageSearchParams) {
                   max={100}
                 />
 
-                <Box sx={{ marginLeft: 'auto', display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Box sx={{ marginLeft: 'auto', display: 'flex', gap: 2 }}>
                   <TextField
                     size="small"
-                    placeholder="Enter genre"
+                    placeholder="Enter genres (use spaces)"
                     value={genre}
                     onChange={(e) => setGenre(e.target.value)}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        ...(genre && {
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'green',
+                            borderWidth: '3px',
+                            boxShadow: '0 0 5px rgba(0, 255, 0, 0.5)'
+                          }
+                        })
+                      }
+                    }}
                   />
                   <Button
                     variant="contained"
                     onClick={handleAddSong}
-                    sx={{ height: '40px' }}
+                    sx={{
+                      transition: 'all 0.3s ease-in-out, box-shadow 0.2s ease-in-out',
+                      height: '40px',
+                      width: '170px',
+                      ...(genre && {
+                        backgroundColor: 'green',
+                        '&:hover': {
+                          backgroundColor: 'green',
+                        },
+                        '&:active': {
+                          backgroundColor: 'green',
+                          boxShadow: '0 0 20px 2px rgba(0, 255, 0, 0.5)',
+                        }
+                      }),
+                    }}
                   >
-                    Add to Database
+                    {genre === '' ? 'Add to Database' : 'With genres'}
                   </Button>
                 </Box>
               </Box>
             </Box>
           </Paper>
         </Box>
-      </main>
-    </ThemeProvider>
+      </main >
+    </ThemeProvider >
   );
 }
