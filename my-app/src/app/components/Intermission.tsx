@@ -1,9 +1,10 @@
 import { Box, Typography } from "@mui/material";
 
-export default function Intermission() {
+export default function Intermission({ text = "Please wait..." }: { text: string }) {
   return (
     <Box
       sx={{
+        width: 'fit-content',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -17,12 +18,10 @@ export default function Intermission() {
         marginBottom: '1rem',
         backdropFilter: 'blur(50px)',
         alignSelf: 'flex-start',
-        width: '20%',
         mx: 'auto',
       }}
-    >
-      <Typography color="white">
-        Please wait...
+    >      <Typography color="white">
+        {text}
       </Typography>
     </Box>
   );

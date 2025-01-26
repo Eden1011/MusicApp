@@ -11,6 +11,7 @@ import DeleteButton from '../components/DeleteButton';
 import { red } from '@mui/material/colors';
 import { urlencode } from '../../../lib/urlfunctions';
 import BoxBackground from '../components/BoxBackground';
+import { useRouter } from 'next/navigation';
 
 interface Account {
   name: string;
@@ -95,7 +96,7 @@ async function updateApiKey(accountId: number, apiKey: string): Promise<void> {
   sessionStorage.setItem('account_api', updatedAccount.api_key);
 }
 
-async function updateDescription(accountId: number, description: string): Promise<string> {
+async function updateDescription(accountId: number, description: string): Promise<Account> {
   const response = await fetch(`/api/account/description?id=${accountId}&description=${urlencode(description)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' }
@@ -103,7 +104,8 @@ async function updateDescription(accountId: number, description: string): Promis
 
   if (!response.ok) throw new Error('Failed to update description');
   const { updatedAccount } = await response.json();
-  return updatedAccount.description;
+  sessionStorage.setItem('account_description', updatedAccount.description || '');
+  return updatedAccount;
 }
 
 function AccountHeader({ account }: { account: Account }) {
@@ -156,6 +158,7 @@ function ApiKeySection({
 
 function DescriptionSection({
   account,
+  description,
   setDescription,
   handleDescChange
 }: {
@@ -170,14 +173,15 @@ function DescriptionSection({
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
         <TextField
           fullWidth
-          placeholder={`Description: "${account.description}"` || 'No description'}
-          type="text"
+          placeholder={account.description || 'No description'}
+          value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
         <Button
           variant='contained'
           onClick={handleDescChange}
           sx={{ height: '50px' }}
+          disabled={!description}
         >
           Change
         </Button>
@@ -204,6 +208,7 @@ function StatsSection({ accountData }: { accountData: AccountData }) {
 }
 
 function AccountInfo() {
+  const router = useRouter();
   const [accountId, setAccountId] = useState(0);
   const [apiKey, setApiKey] = useState("");
   const [accountData, setAccountData] = useState<AccountData | null>(null);
@@ -223,6 +228,7 @@ function AccountInfo() {
         setAccountId(parseInt(account_id));
         const data = await fetchAccountData(account_id);
         setAccountData(data);
+        setDescription(data.account.description || '');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -237,6 +243,12 @@ function AccountInfo() {
     if (!apiKey) return;
     try {
       await updateApiKey(accountId, apiKey);
+      if (accountData) {
+        setAccountData({
+          ...accountData,
+          account: { ...accountData.account, api_key: apiKey }
+        });
+      }
     } catch (error) {
       console.error('Error updating API key:', error);
     }
@@ -245,12 +257,22 @@ function AccountInfo() {
   async function handleDescChange() {
     if (!description) return;
     try {
-      const updatedDesc = await updateDescription(accountId, description);
-      setDescription(updatedDesc);
+      const updatedAccount = await updateDescription(accountId, description);
+      if (accountData) {
+        setAccountData({
+          ...accountData,
+          account: updatedAccount
+        });
+      }
     } catch (error) {
       console.error('Error updating description:', error);
     }
   }
+
+  const handleLogout = () => {
+    sessionStorage.clear();
+    router.push('/');
+  };
 
   if (loading) return <Intermission />;
   if (error) return <BoxYoutubeError data={{ error: { message: error } }} />;
@@ -290,10 +312,28 @@ function AccountInfo() {
         mx: 'auto'
       }}>
         <DeleteButton accountId={accountId} />
+        <Button
+          variant="contained"
+          onClick={handleLogout}
+          sx={{
+            transition: 'all 0.3s ease-in-out, box-shadow 0.2s ease-in-out',
+            backgroundColor: 'red',
+            '&:hover': {
+              backgroundColor: red[600],
+            },
+            '&:active': {
+              backgroundColor: red[700],
+              boxShadow: '0 0 20px 10px rgba(255, 0, 0, 0.5)',
+            }
+          }}
+        >
+          Log out
+        </Button>
       </Box>
     </>
   );
 }
+
 export default function App() {
   return (
     <ThemeProvider theme={darkTheme}>

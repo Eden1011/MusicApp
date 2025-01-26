@@ -1,4 +1,4 @@
-export default function WatchGenreLayout({
+export default function OuterWatchLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

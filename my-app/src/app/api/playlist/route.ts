@@ -23,8 +23,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const data = await request.json();
     if (!data.name || !data.account_id) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-    await createPlaylist(data)
-    return NextResponse.json({ message: 'Playlist created' }, { status: 201 })
+    const lastId = await createPlaylist(data)
+    return NextResponse.json({ message: 'Playlist created', lastId: lastId.id }, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
@@ -32,11 +32,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 export async function PATCH(request: NextRequest): Promise<NextResponse> {
   try {
-    const { id, song_id } = await request.json()
-    if (!id || !song_id) return NextResponse.json({ error: 'Provide playlist ID and song ID' }, { status: 400 })
-    await addSongToPlaylist(id, song_id)
-    return NextResponse.json({ message: 'Song added to playlist' }, { status: 200 })
-  } catch {
+    const { id, music_url } = await request.json()
+    if (!id || !music_url) return NextResponse.json({ error: 'Provide playlist ID and music URL' }, { status: 400 })
+    const result = await addSongToPlaylist(id, music_url)
+    const songs = await getPlaylistSongs(parseInt(id))
+    return NextResponse.json({
+      message: `Added ${result.added_count} song(s) to playlist`,
+      songs: songs,
+      ...result
+    }, { status: 200 })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'No songs found with this music URL') {
+      return NextResponse.json({ error: error.message }, { status: 404 })
+    }
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
 }

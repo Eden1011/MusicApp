@@ -23,6 +23,7 @@ const darkTheme = createTheme({
       styleOverrides: {
         body: {
           backgroundImage: 'radial-gradient(circle, black 0%, rgba(1,20,60,1) 100%)',
+          backgroundAttachment: 'fixed',
           minHeight: '100vh',
         },
       },

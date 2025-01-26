@@ -4,7 +4,6 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import darkTheme from "@/styles/theme";
 import { use, useEffect, useState } from 'react';
-import { Box } from '@mui/material';
 import BoxYoutubeError from '@/app/components/BoxYoutubeError';
 import CallsLeft from '@/app/components/CallsLeft';
 import StackSearchResults from '@/app/components/StackSearchResults';
@@ -137,7 +136,7 @@ export default function SearchQueryPage({ params, searchParams }: SearchQueryPag
       return (
         <>
           <Intermission />
-          <StackSearchResults amount={number} data={parsed} isLoading={isLoading} />
+          <StackSearchResults amount={number} data={parsed} isLoading={isLoading} page='search' />
         </>
 
       )
@@ -145,7 +144,7 @@ export default function SearchQueryPage({ params, searchParams }: SearchQueryPag
     return (
       <>
         <CallsLeft />
-        <StackSearchResults amount={number} data={parsed} isLoading={isLoading} />
+        <StackSearchResults amount={number} data={parsed} isLoading={isLoading} page='search' />
       </>
     )
   }

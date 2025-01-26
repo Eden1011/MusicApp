@@ -143,11 +143,25 @@ export async function getSongGenres(song_id: number): Promise<string[]> {
   )
 }
 
-export async function likeSong(account_id: number, song_id: number) {
+export async function likeSong(account_id: number, music_url: string) {
   const db = await getDb();
-  return db.run(
-    `INSERT INTO liked_songs (account_id, song_id) VALUES (?, ?)`, [account_id, song_id]
-  )
+  const songs = await db.all<Song[]>(
+    `SELECT * FROM songs WHERE music_url = ?`,
+    [music_url]
+  );
+  if (songs.length === 0) {
+    throw new Error('No songs found with this music URL');
+  }
+  const likePromises = songs.map(song =>
+    db.run(
+      `INSERT OR IGNORE INTO liked_songs (account_id, song_id) VALUES (?, ?)`,
+      [account_id, song.id]
+    )
+  );
+  await Promise.all(likePromises);
+  return {
+    liked_count: songs.length
+  };
 }
 
 export async function getLikedSongs(account_id: number): Promise<Song[]> {
@@ -159,28 +173,64 @@ export async function getLikedSongs(account_id: number): Promise<Song[]> {
     `, account_id)
 }
 
-export async function deleteLikedSong(account_id: number, song_id: number) {
+export async function deleteLikedSong(account_id: number, music_url: string) {
   const db = await getDb()
-  return db.run('DELETE FROM liked_songs WHERE account_id = ? AND song_id = ?', [account_id, song_id])
+  const songs = await db.all<Song[]>(`SELECT * FROM songs WHERE music_url = ?`, [music_url]);
+  if (songs.length === 0) {
+    throw new Error('No songs found with this music URL');
+  }
+  const deletePromises = songs.map(song =>
+    db.run('DELETE FROM liked_songs WHERE account_id = ? AND song_id = ?', [account_id, song.id])
+  );
+  await Promise.all(deletePromises);
+  return { deleted_count: songs.length };
 }
 
 export async function createPlaylist(data: Omit<Playlist, 'id' | 'created_at'>) {
   const db = await getDb()
-  return db.run(`INSERT INTO playlists (name, account_id) VALUES (?, ?)`, [data.name, data.account_id])
+  const result = await db.run(`
+  INSERT INTO playlists (name, account_id) VALUES (?, ?)`,
+    [data.name, data.account_id]
+  )
+  return db.get(`SELECT * FROM playlists WHERE id = ?`, result.lastID)
 }
 
-export async function addSongToPlaylist(playlist_id: number, song_id: number) {
+export async function addSongToPlaylist(playlist_id: number, music_url: string) {
   const db = await getDb();
-  return db.run(
-    `INSERT INTO playlist_songs (playlist_id, song_id) VALUES (?, ?)`, [playlist_id, song_id]
-  )
+  const songs = await db.all<Song[]>(`SELECT * FROM songs WHERE music_url = ?`, [music_url]);
+
+  if (songs.length === 0) {
+    throw new Error('No songs found with this music URL');
+  }
+
+  const addPromises = songs.map(song =>
+    db.run(
+      `INSERT OR IGNORE INTO playlist_songs (playlist_id, song_id) VALUES (?, ?)`,
+      [playlist_id, song.id]
+    )
+  );
+
+  await Promise.all(addPromises);
+  return { added_count: songs.length };
 }
 
-export async function removeSongFromPlaylist(playlist_id: number, song_id: number) {
+export async function removeSongFromPlaylist(playlist_id: number, music_url: string) {
   const db = await getDb();
-  return db.run(
-    `DELETE FROM playlist_songs WHERE playlist_id = ? AND song_id = ?`, [playlist_id, song_id]
-  )
+  const songs = await db.all<Song[]>(`SELECT * FROM songs WHERE music_url = ?`, [music_url]);
+
+  if (songs.length === 0) {
+    throw new Error('No songs found with this music URL');
+  }
+
+  const removePromises = songs.map(song =>
+    db.run(
+      `DELETE FROM playlist_songs WHERE playlist_id = ? AND song_id = ?`,
+      [playlist_id, song.id]
+    )
+  );
+
+  await Promise.all(removePromises);
+  return { removed_count: songs.length };
 }
 
 export async function getAccountPlaylists(account_id: number): Promise<Playlist[]> {

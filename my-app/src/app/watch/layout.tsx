@@ -1,4 +1,4 @@
-export default function OuterWatchLayout({
+export default function WatchLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

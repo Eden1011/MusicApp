@@ -1,5 +1,5 @@
-import { Stack, Box, Skeleton, StackProps } from "@mui/material";
-import SearchResult from "./SearchResults";
+import { Stack, Box, Skeleton } from "@mui/material";
+import { SearchResultRegular, SearchResultWatch } from "./SearchResults";
 import { SearchResultProps } from "./SearchResults";
 import BoxBackground from "./BoxBackground";
 
@@ -33,7 +33,7 @@ export function SearchStackSkeleton({ amount }: { amount: number }) {
           key={`thumbnail-skeleton-${i}`}
           variant="rectangular"
           width={120}
-          height={70}
+          height={80}
           sx={{ gridArea: 'image' }}
         />
         <Box
@@ -57,17 +57,19 @@ export function SearchStackSkeleton({ amount }: { amount: number }) {
   )
 }
 
-function StackQueryResults({ data }: { data: SearchResultProps[] }) {
+function StackQueryResults({ data, page }: { data: SearchResultProps[], page: string }) {
   return (<Stack key="stackdifferent"
     direction="column"
     spacing={2}
   >
-    {data.map((x, idx) => <SearchResult key={`search-res-${idx}`} result={x} />)}
+    {data.map((x, idx) =>
+      page === 'search' ? <SearchResultRegular key={`search-res-${idx}`} result={x} /> : <SearchResultWatch key={`search-res-${idx}`} result={x} />
+    )}
   </Stack>
   )
 }
 
-export default function StackSearchResults({ amount, data, isLoading }: { amount: number, data: SearchResultProps[], isLoading: boolean }) {
+export default function StackSearchResults({ amount, data, isLoading, page }: { amount: number, data: SearchResultProps[], isLoading: boolean, page: string }) {
   if (isLoading) {
     return (
       <BoxBackground key={'SkeletonBoxBg'}>
@@ -78,7 +80,7 @@ export default function StackSearchResults({ amount, data, isLoading }: { amount
 
   return (
     <BoxBackground key={'ProperStackQueryBoxBg'}>
-      <StackQueryResults data={data} />
+      <StackQueryResults data={data} page={page} />
     </BoxBackground>
   );
 }

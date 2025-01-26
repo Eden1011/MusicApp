@@ -6,9 +6,25 @@ import Navbar from '@/app/components/Navbar';
 import StackSearchResults from '@/app/components/StackSearchResults';
 import { useEffect, useState } from 'react';
 import { SearchResultProps } from '@/app/components/SearchResults';
+import BoxYoutubeError from '@/app/components/BoxYoutubeError';
+import InputWatchSearch from '@/app/components/InputWatchSearch';
+import { Box } from '@mui/material';
+
+
+
+function AllSongsResults({ loading, amount, data }:
+  { loading: boolean, amount: number, data: any }) {
+  if (loading) return (<StackSearchResults amount={amount} data={data} isLoading={loading} page='watch' />)
+  else {
+    if (data.length === 0) return (<BoxYoutubeError data={{ error: { message: "No songs found!" } }} />)
+    else return (<StackSearchResults amount={amount} data={data} isLoading={loading} page='watch' />)
+  }
+}
+
 
 export default function WatchAllPage() {
   const [songs, setSongs] = useState<SearchResultProps[]>([]);
+  const [filteredSongs, setFilteredSongs] = useState<SearchResultProps[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +40,7 @@ export default function WatchAllPage() {
           thumbnailUrl: song.thumbnail_url
         }));
         setSongs(formattedSongs);
+        setFilteredSongs(formattedSongs);
       } catch (error) {
         console.error('Error fetching songs:', error);
       } finally {
@@ -39,11 +56,10 @@ export default function WatchAllPage() {
       <CssBaseline />
       <main>
         <Navbar />
-        <StackSearchResults
-          amount={5}
-          data={songs}
-          isLoading={loading}
-        />
+        <Box sx={{ marginTop: '1rem' }}>
+          <InputWatchSearch songs={songs} setFilteredSongs={setFilteredSongs} text='Search from all songs' />
+        </Box>
+        <AllSongsResults loading={loading} amount={5} data={filteredSongs} />
       </main>
     </ThemeProvider>
   );

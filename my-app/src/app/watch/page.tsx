@@ -1,53 +1,28 @@
 "use client"
-import { Box, Button, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import Navbar from '@/app/components/Navbar';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import darkTheme from "@/styles/theme";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { urlencode } from '../../../lib/urlfunctions';
 import { useRouter } from 'next/navigation';
 import BoxBackground from '../components/BoxBackground';
+import InputWatchSearch from '@/app/components/InputWatchSearch';
 
-interface Song {
-  id: number;
-  title: string;
-  artist: string;
-  music_url: string;
-  thumbnail_url: string;
-  genre?: string[];
-}
-
-
-function StackGenres() {
-  const [genres, setGenres] = useState<string[]>([]);
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+function StackGenres({ genres, filteredGenres }: { genres: string[], filteredGenres: string[] }) {
   const router = useRouter()
-
-  const fetchGenres = async () => {
-    try {
-      const response = await fetch('/api/genre/all');
-      const data = await response.json();
-      setGenres(data.genres || []);
-    } catch (error) {
-      console.error('Error fetching genres:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchGenres();
-  }, []);
 
   return (
     <Stack spacing={2}>
       <Button
         variant="contained"
         onClick={() => router.push('/watch/all')}
-        color={selectedGenre === null ? "primary" : "inherit"}
+        color="primary"
       >
         All Songs
       </Button>
-      {genres.map((genre, index) => {
+      {filteredGenres.map((genre, index) => {
         const rainbowColors = [
           '#FF3333', '#FF6633', '#FF9933', '#FFCC33', '#FFFF33', '#CCFF33', '#99FF33',
           '#66FF33', '#33FF33', '#33FF66', '#33FF99', '#33FFCC', '#33FFFF', '#33CCFF',
@@ -86,19 +61,43 @@ function StackGenres() {
           </Button>
         );
       })}
-    </Stack >
+    </Stack>
   )
 }
 
-
 export default function WatchPage() {
+  const [genres, setGenres] = useState<string[]>([]);
+  const [filteredGenres, setFilteredGenres] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const response = await fetch('/api/genre/all');
+        const data = await response.json();
+        const genresList = data.genres || [];
+        setGenres(genresList);
+        setFilteredGenres(genresList);
+      } catch (error) {
+        console.error('Error fetching genres:', error);
+      }
+    };
+    fetchGenres();
+  }, []);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <main>
         <Navbar />
+        <Box sx={{ marginTop: '1rem' }}>
+          <InputWatchSearch
+            songs={genres}
+            setFilteredSongs={setFilteredGenres}
+            text="Search for genres"
+          />
+        </Box>
         <BoxBackground key={'StackGenresBoxBg'}>
-          <StackGenres />
+          <StackGenres genres={genres} filteredGenres={filteredGenres} />
         </BoxBackground>
       </main>
     </ThemeProvider>
