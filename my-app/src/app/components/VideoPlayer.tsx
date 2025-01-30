@@ -1,10 +1,11 @@
 "use client"
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import YouTube from 'react-youtube';
-import { Box, Slider, IconButton, Button, Collapse, List, ListItem, ListItemButton, ListItemText, TextField } from '@mui/material';
+import { Box, Slider, IconButton, Button, Collapse, List, ListItem, ListItemButton, ListItemText, TextField, useMediaQuery, useTheme } from '@mui/material';
 import { PlayArrow, Pause, VolumeUp, VolumeOff, Share } from '@mui/icons-material';
 import OutlinedButton from './OutlinedButton';
 import Popup from './Popup';
+import { useFormik } from 'formik';
 
 interface VideoPlayerProps {
   videoId: string;
@@ -16,6 +17,10 @@ interface VideoPlayerProps {
 }
 
 export default function VideoPlayer({ videoId, title, channelTitle, thumbnailUrl, onVideoData, onEnded }: VideoPlayerProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
@@ -29,8 +34,57 @@ export default function VideoPlayer({ videoId, title, channelTitle, thumbnailUrl
   const [accountId, setAccountId] = useState<string | null>(null);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [isLiked, setIsLiked] = useState(false);
-  const [genre, setGenre] = useState('');
   const [popupSeverity, setPopupSeverity] = useState<'success' | 'error' | 'info'>('info');
+
+  const formik = useFormik({
+    initialValues: {
+      genre: ''
+    },
+    onSubmit: async (values) => {
+      const songData = {
+        title: title || playerRef.current?.getVideoData().title,
+        artist: channelTitle || playerRef.current?.getVideoData().author,
+        music_url: videoId,
+        thumbnail_url: thumbnailUrl || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+      };
+
+      try {
+        const response = await fetch('/api/songs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(songData),
+        });
+
+        if (response.ok) {
+          const songResponse = await response.json();
+          if (values.genre) {
+            const array = [...new Set(values.genre.trim().split(/\s+/).map(g => g.toLowerCase()))];
+            await fetch('/api/songs', {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                id: songResponse.song.id,
+                genres: array
+              }),
+            });
+          }
+          formik.resetForm();
+          setPopupMessage('Song added to database');
+          setPopupSeverity('info')
+          setIsPopupOpen(true);
+        }
+      } catch (error) {
+        console.error(error);
+        setPopupMessage("Could not add song to database")
+        setPopupSeverity('error')
+        setIsPopupOpen(true)
+      }
+    }
+  });
 
   useLayoutEffect(() => {
     if (playerRef.current) {
@@ -50,7 +104,7 @@ export default function VideoPlayer({ videoId, title, channelTitle, thumbnailUrl
   }, [videoId]);
 
   const opts = {
-    height: '500',
+    height: isMobile ? '240' : isTablet ? '360' : '500',
     width: '100%',
     playerVars: {
       autoplay: 1,
@@ -59,51 +113,6 @@ export default function VideoPlayer({ videoId, title, channelTitle, thumbnailUrl
       host: 'https://www.youtube.com',
       origin: typeof window !== 'undefined' ? window.location.origin : '',
     },
-  };
-
-  const handleAddSong = async () => {
-    const songData = {
-      title: title || playerRef.current?.getVideoData().title,
-      artist: channelTitle || playerRef.current?.getVideoData().author,
-      music_url: videoId,
-      thumbnail_url: thumbnailUrl || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
-    };
-
-    try {
-      const response = await fetch('/api/songs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(songData),
-      });
-
-      if (response.ok) {
-        const songResponse = await response.json();
-        if (genre) {
-          const array = [...new Set(genre.trim().split(/\s+/).map(g => g.toLowerCase()))];
-          await fetch('/api/songs', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              id: songResponse.song.id,
-              genres: array
-            }),
-          });
-        }
-        setGenre('');
-        setPopupMessage('Song added to database');
-        setPopupSeverity('info')
-        setIsPopupOpen(true);
-      }
-    } catch (error) {
-      console.error(error);
-      setPopupMessage("Could not add song to database")
-      setPopupSeverity('error')
-      setIsPopupOpen(true)
-    }
   };
 
   const handleLike = async () => {
@@ -252,67 +261,91 @@ export default function VideoPlayer({ videoId, title, channelTitle, thumbnailUrl
   };
 
   return (
-    <>
+    <Box sx={{ width: '100%', maxWidth: '100vw', overflow: 'hidden' }}>
       <YouTube
         videoId={videoId}
         opts={opts}
         onReady={handleReady}
         onStateChange={handleStateChange}
       />
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: isMobile ? 1 : 2 }}>
         <Slider
           value={currentTime}
           min={0}
           max={duration}
           onChange={(_, value) => handleTimeChange(value as number)}
-          sx={{ mb: 2 }}
+          sx={{ mb: isMobile ? 1 : 2 }}
         />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={handlePlayPause}>
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          width: '100%',
+        }}>
+          <IconButton onClick={handlePlayPause} size={isMobile ? "small" : "medium"}>
             {isPlaying ? <Pause /> : <PlayArrow />}
           </IconButton>
-          <IconButton onClick={handleMuteToggle}>
-            {isMuted ? <VolumeOff /> : <VolumeUp />}
-          </IconButton>
-          <Slider
-            value={isMuted ? 0 : volume}
-            onChange={(_, value) => handleVolumeChange(value as number)}
-            sx={{ width: 100 }}
-            min={0}
-            max={100}
-          />
-          <Box sx={{ marginLeft: 'auto', display: 'flex', gap: 2 }}>
-            <IconButton onClick={handleShare}>
-              <Share />
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            width: '200px'
+          }}>
+            <IconButton onClick={handleMuteToggle} size={isMobile ? "small" : "medium"}>
+              {isMuted ? <VolumeOff /> : <VolumeUp />}
             </IconButton>
+            <Slider
+              value={Number(isMuted ? 0 : volume)}
+              onChange={(_, value) => handleVolumeChange(Number(value))}
+              min={0}
+              max={100}
+            />
           </Box>
+          <Box sx={{ flex: 1 }} />
+          <IconButton onClick={handleShare} size={isMobile ? "small" : "medium"}>
+            <Share />
+          </IconButton>
         </Box>
       </Box>
 
-      <Box sx={{ marginRight: 'auto', display: 'flex', gap: 2, paddingLeft: '1rem' }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        p: isMobile ? 1 : 2,
+        width: '100%'
+      }}>
         {accountId && (
           <>
             <OutlinedButton
               value={showPlaylists ? "Hide playlists" : "Add to playlist"}
               onClick={() => setShowPlaylists(!showPlaylists)}
-              width={170}
+              width="100%"
             />
             <OutlinedButton
               value={isLiked ? "Dislike" : "Like"}
               onClick={isLiked ? handleUnlike : handleLike}
-              width={90}
+              width="100%"
             />
           </>
         )}
-        <Box sx={{ display: 'flex', marginLeft: 'auto', alignItems: 'center', gap: 2, paddingRight: '1rem', marginBottom: '1rem' }}>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          width: '100%'
+        }}>
           <TextField
             size="small"
             placeholder="Enter genres (use spaces)"
-            value={genre}
-            onChange={(e) => setGenre(e.target.value)}
+            name="genre"
+            value={formik.values.genre}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            fullWidth
             sx={{
               '& .MuiOutlinedInput-root': {
-                ...(genre && {
+                ...(formik.values.genre && {
                   '&.Mui-focused fieldset': {
                     borderColor: 'green',
                     borderWidth: '3px',
@@ -324,12 +357,11 @@ export default function VideoPlayer({ videoId, title, channelTitle, thumbnailUrl
           />
           <Button
             variant="contained"
-            onClick={handleAddSong}
+            onClick={() => formik.handleSubmit()}
+            fullWidth
             sx={{
-              transition: 'all 0.3s ease-in-out, box-shadow 0.2s ease-in-out',
               height: '40px',
-              width: '180px',
-              ...(genre && {
+              ...(formik.values.genre && {
                 backgroundColor: 'green',
                 '&:hover': {
                   backgroundColor: 'green',
@@ -341,14 +373,19 @@ export default function VideoPlayer({ videoId, title, channelTitle, thumbnailUrl
               }),
             }}
           >
-            {genre === '' ? 'Add to Database' : 'With genres'}
+            {formik.values.genre === '' ? 'Add to Database' : 'With genres'}
           </Button>
         </Box>
       </Box>
 
       {accountId && (
         <Collapse in={showPlaylists} sx={{ width: '100%' }}>
-          <List sx={{ bgcolor: 'rgba(0, 0, 0, 0.3)', borderRadius: 0, marginLeft: '1rem', marginRight: '1rem', marginBottom: '1rem' }}>
+          <List sx={{
+            bgcolor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: 0,
+            mx: isMobile ? 1 : 2,
+            mb: isMobile ? 1 : 2
+          }}>
             {playlists.length > 0 ? (
               playlists.map((playlist: any) => (
                 <ListItem key={playlist.id} disablePadding>
@@ -379,6 +416,6 @@ export default function VideoPlayer({ videoId, title, channelTitle, thumbnailUrl
         severity="info"
         duration={2000}
       />
-    </>
+    </Box>
   );
 }

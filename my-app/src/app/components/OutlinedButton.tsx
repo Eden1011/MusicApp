@@ -3,8 +3,8 @@ import Button from "@mui/material/Button";
 interface OutlinedButtonProps {
   value: string;
   onClick: any;
-  height?: number;
-  width?: number
+  height?: any;
+  width?: any;
 }
 
 export default function OutlinedButton({ value, onClick, height = 40, width = 200 }: OutlinedButtonProps) {

@@ -5,11 +5,13 @@ import {
   CardContent,
   CardMedia,
   IconButton,
-  Box
+  Box,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import { useRouter } from 'next/navigation';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface SongCardProps {
@@ -28,6 +30,8 @@ interface SongCardProps {
 export default function SongCard({ song, action, state, push = `/watch/video/${song.music_url}` }: SongCardProps) {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     setIsLoggedIn(!!sessionStorage.getItem('account_id'));
@@ -35,47 +39,54 @@ export default function SongCard({ song, action, state, push = `/watch/video/${s
 
   return (
     <Card sx={{
-      width: '150px',
+      width: { xs: '130px', sm: '150px' },
       backgroundColor: 'rgba(30, 30, 30, 0.6)',
       borderRadius: '8px',
       transition: 'transform 0.2s, box-shadow 0.2s',
       '&:hover': {
-        transform: 'translateY(-4px)',
-        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)'
-      }
+        transform: isMobile ? 'none' : 'translateY(-4px)',
+        boxShadow: isMobile ? 'none' : '0 6px 12px rgba(0, 0, 0, 0.2)'
+      },
+      '&:active': isMobile ? {
+        transform: 'scale(0.98)',
+        backgroundColor: 'rgba(40, 40, 40, 0.6)'
+      } : {}
     }}>
       <CardMedia
         component="img"
         sx={{
-          height: "100px",
+          height: { xs: "80px", sm: "100px" },
           objectFit: "cover",
           cursor: 'pointer',
           transition: 'transform 0.2s',
           '&:hover': {
-            transform: 'scale(1.05)'
-          }
+            transform: isMobile ? 'none' : 'scale(1.05)'
+          },
+          '&:active': isMobile ? {
+            transform: 'scale(0.98)'
+          } : {}
         }}
         image={song.thumbnail_url}
         alt={song.title}
         onClick={() => { push ? router.push(push) : null }}
       />
       <CardContent sx={{
-        padding: '12px',
+        padding: { xs: '8px', sm: '12px' },
         '&:last-child': {
-          paddingBottom: '12px'
+          paddingBottom: { xs: '8px', sm: '12px' }
         }
       }}>
         <Box sx={{ mb: 1 }}>
           <Typography
             variant="body1"
             sx={{
-              fontSize: '0.9rem',
+              fontSize: { xs: '0.8rem', sm: '0.9rem' },
               fontWeight: 500,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
               mb: 0.5,
-              maxWidth: '130px'
+              maxWidth: { xs: '110px', sm: '130px' }
             }}>
             {song.title}
           </Typography>
@@ -83,11 +94,11 @@ export default function SongCard({ song, action, state, push = `/watch/video/${s
             variant="body2"
             color="text.secondary"
             sx={{
-              fontSize: '0.8rem',
+              fontSize: { xs: '0.7rem', sm: '0.8rem' },
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              maxWidth: '130px'
+              maxWidth: { xs: '110px', sm: '130px' }
             }}
           >
             {song.artist}
@@ -100,10 +111,14 @@ export default function SongCard({ song, action, state, push = `/watch/video/${s
               color='error'
               size="small"
               sx={{
-                p: 0.5,
+                p: { xs: 0.3, sm: 0.5 },
                 '&:hover': {
                   backgroundColor: 'rgba(255, 0, 0, 0.1)'
-                }
+                },
+                '&:active': isMobile ? {
+                  transform: 'scale(0.9)',
+                  backgroundColor: 'rgba(255, 0, 0, 0.2)'
+                } : {}
               }}
             >
               {state ? <FavoriteIcon fontSize="small" /> : <DeleteIcon fontSize="small" />}
@@ -111,6 +126,6 @@ export default function SongCard({ song, action, state, push = `/watch/video/${s
           </Box>
         )}
       </CardContent>
-    </Card >
+    </Card>
   );
 }

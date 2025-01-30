@@ -4,7 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import darkTheme from "@/styles/theme";
 import { useState, useEffect } from "react";
-import { Typography, Box, Stack, Divider, Button, TextField } from '@mui/material';
+import { Typography, Box, Stack, Divider, Button, TextField, useMediaQuery, Container } from '@mui/material';
 import Intermission from '../components/Intermission';
 import BoxYoutubeError from '../components/BoxYoutubeError';
 import DeleteButton from '../components/DeleteButton';
@@ -12,6 +12,7 @@ import { red } from '@mui/material/colors';
 import { urlencode } from '../../../lib/urlfunctions';
 import BoxBackground from '../components/BoxBackground';
 import { useRouter } from 'next/navigation';
+import { useFormik } from 'formik';
 
 interface Account {
   name: string;
@@ -33,6 +34,7 @@ interface TextFieldStyleProps {
 
 function getTextFieldStyles({ value, targetLength = 39 }: TextFieldStyleProps) {
   return {
+    width: '100%',
     '& .MuiOutlinedInput-root': {
       ...(value === '' && {
         '&.Mui-focused fieldset': {
@@ -54,7 +56,8 @@ function getTextFieldStyles({ value, targetLength = 39 }: TextFieldStyleProps) {
 
 function getChangeButtonStyles(value: string) {
   return {
-    height: '50px',
+    minHeight: '50px',
+    whiteSpace: 'nowrap',
     transition: 'all 0.3s ease-in-out, box-shadow 0.2s ease-in-out',
     ...(value === '' && {
       backgroundColor: 'red',
@@ -109,11 +112,21 @@ async function updateDescription(accountId: number, description: string): Promis
 }
 
 function AccountHeader({ account }: { account: Account }) {
+  const isMobile = useMediaQuery('(max-width:600px)');
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-        <Typography variant="h4">{account.name}</Typography>
-        <Typography variant="body1">
+      <Box sx={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between',
+        gap: isMobile ? 2 : 0,
+        width: '100%'
+      }}>
+        <Typography variant={isMobile ? "h5" : "h4"} sx={{ wordBreak: 'break-word' }}>
+          {account.name}
+        </Typography>
+        <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
           {account.description || 'No description'}
         </Typography>
       </Box>
@@ -124,30 +137,38 @@ function AccountHeader({ account }: { account: Account }) {
 
 function ApiKeySection({
   account,
-  apiKey,
-  setApiKey,
-  handleApiChange
+  formik
 }: {
   account: Account,
-  apiKey: string,
-  setApiKey: (value: string) => void,
-  handleApiChange: () => void
+  formik: ReturnType<typeof useFormik>
 }) {
+  const isMobile = useMediaQuery('(max-width:600px)');
+
   return (
     <Box>
       <Typography variant="body2">API Key:</Typography>
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: 2,
+        alignItems: isMobile ? 'stretch' : 'center',
+        mt: 1
+      }}>
         <TextField
           fullWidth
-          placeholder={account.api_key}
           type="password"
-          onChange={(e) => setApiKey(e.target.value)}
-          sx={getTextFieldStyles({ value: apiKey })}
+          name="apiKey"
+          value={formik.values.apiKey}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          sx={getTextFieldStyles({ value: formik.values.apiKey })}
         />
         <Button
           variant='contained'
-          onClick={handleApiChange}
-          sx={getChangeButtonStyles(apiKey)}
+          onClick={() => formik.submitForm()}
+          sx={getChangeButtonStyles(formik.values.apiKey)}
+          disabled={!formik.values.apiKey || !formik.isValid}
+          fullWidth={isMobile}
         >
           Change
         </Button>
@@ -158,30 +179,38 @@ function ApiKeySection({
 
 function DescriptionSection({
   account,
-  description,
-  setDescription,
-  handleDescChange
+  formik
 }: {
   account: Account,
-  description: string,
-  setDescription: (value: string) => void,
-  handleDescChange: () => void
+  formik: ReturnType<typeof useFormik>
 }) {
+  const isMobile = useMediaQuery('(max-width:600px)');
+
   return (
     <Box>
       <Typography variant="body2">Description:</Typography>
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: 2,
+        alignItems: isMobile ? 'stretch' : 'center',
+        mt: 1
+      }}>
         <TextField
           fullWidth
-          placeholder={account.description || 'No description'}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          name="description"
+          value={formik.values.description}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          multiline={isMobile}
+          rows={isMobile ? 3 : 1}
         />
         <Button
           variant='contained'
-          onClick={handleDescChange}
-          sx={{ height: '50px' }}
-          disabled={!description}
+          onClick={() => formik.submitForm()}
+          sx={{ minHeight: '50px' }}
+          disabled={!formik.values.description || !formik.isValid}
+          fullWidth={isMobile}
         >
           Change
         </Button>
@@ -191,14 +220,22 @@ function DescriptionSection({
 }
 
 function StatsSection({ accountData }: { accountData: AccountData }) {
+  const isMobile = useMediaQuery('(max-width:600px)');
+
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between',
+      gap: 2,
+      width: '100%'
+    }}>
       <Box>
         <Typography variant="h6">
           Liked songs: {accountData.likedSongs.length}
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box>
         <Typography variant="h6">
           Playlists: {accountData.playlists.length}
         </Typography>
@@ -209,12 +246,48 @@ function StatsSection({ accountData }: { accountData: AccountData }) {
 
 function AccountInfo() {
   const router = useRouter();
+  const isMobile = useMediaQuery('(max-width:600px)');
   const [accountId, setAccountId] = useState(0);
-  const [apiKey, setApiKey] = useState("");
   const [accountData, setAccountData] = useState<AccountData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [description, setDescription] = useState<string>('');
+
+  const formik = useFormik({
+    initialValues: {
+      apiKey: '',
+      description: ''
+    },
+    onSubmit: async (values) => {
+      if (values.apiKey) {
+        try {
+          await updateApiKey(accountId, values.apiKey);
+          if (accountData) {
+            setAccountData({
+              ...accountData,
+              account: { ...accountData.account, api_key: values.apiKey }
+            });
+          }
+          formik.setFieldValue('apiKey', '');
+        } catch (error) {
+          console.error('Error updating API key:', error);
+        }
+      }
+
+      if (values.description) {
+        try {
+          const updatedAccount = await updateDescription(accountId, values.description);
+          if (accountData) {
+            setAccountData({
+              ...accountData,
+              account: updatedAccount
+            });
+          }
+        } catch (error) {
+          console.error('Error updating description:', error);
+        }
+      }
+    },
+  });
 
   useEffect(() => {
     async function initAccountData() {
@@ -228,7 +301,7 @@ function AccountInfo() {
         setAccountId(parseInt(account_id));
         const data = await fetchAccountData(account_id);
         setAccountData(data);
-        setDescription(data.account.description || '');
+        formik.setFieldValue('description', data.account.description || '');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -238,36 +311,6 @@ function AccountInfo() {
 
     initAccountData();
   }, []);
-
-  async function handleApiChange() {
-    if (!apiKey) return;
-    try {
-      await updateApiKey(accountId, apiKey);
-      if (accountData) {
-        setAccountData({
-          ...accountData,
-          account: { ...accountData.account, api_key: apiKey }
-        });
-      }
-    } catch (error) {
-      console.error('Error updating API key:', error);
-    }
-  }
-
-  async function handleDescChange() {
-    if (!description) return;
-    try {
-      const updatedAccount = await updateDescription(accountId, description);
-      if (accountData) {
-        setAccountData({
-          ...accountData,
-          account: updatedAccount
-        });
-      }
-    } catch (error) {
-      console.error('Error updating description:', error);
-    }
-  }
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -280,56 +323,55 @@ function AccountInfo() {
 
   return (
     <>
-      <BoxBackground>
-        <Stack spacing={3}>
-          <AccountHeader account={accountData.account} />
-          <ApiKeySection
-            account={accountData.account}
-            apiKey={apiKey}
-            setApiKey={setApiKey}
-            handleApiChange={handleApiChange}
-          />
-          <DescriptionSection
-            account={accountData.account}
-            description={description}
-            setDescription={setDescription}
-            handleDescChange={handleDescChange}
-          />
-          <Box>
-            <Typography variant="body2">
-              Created: {accountData.account.created_at}
-            </Typography>
-          </Box>
-          <StatsSection accountData={accountData} />
-        </Stack>
-      </BoxBackground>
-      <Box sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        mt: 2,
-        px: 3,
-        width: '100%',
-        mx: 'auto'
-      }}>
-        <DeleteButton accountId={accountId} />
-        <Button
-          variant="contained"
-          onClick={handleLogout}
-          sx={{
-            transition: 'all 0.3s ease-in-out, box-shadow 0.2s ease-in-out',
-            backgroundColor: 'red',
-            '&:hover': {
-              backgroundColor: red[600],
-            },
-            '&:active': {
-              backgroundColor: red[700],
-              boxShadow: '0 0 20px 10px rgba(255, 0, 0, 0.5)',
-            }
-          }}
-        >
-          Log out
-        </Button>
-      </Box>
+      <Container maxWidth="lg" sx={{ px: isMobile ? 2 : 3 }}>
+        <BoxBackground>
+          <Stack spacing={3}>
+            <AccountHeader account={accountData.account} />
+            <ApiKeySection
+              account={accountData.account}
+              formik={formik}
+            />
+            <DescriptionSection
+              account={accountData.account}
+              formik={formik}
+            />
+            <Box>
+              <Typography variant="body2">
+                Created: {accountData.account.created_at}
+              </Typography>
+            </Box>
+            <StatsSection accountData={accountData} />
+          </Stack>
+        </BoxBackground>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
+          gap: 2,
+          mt: 2,
+          width: '100%'
+        }}>
+          <DeleteButton accountId={accountId} />
+          <Button
+            variant="contained"
+            onClick={handleLogout}
+            fullWidth={isMobile}
+            sx={{
+              transition: 'all 0.3s ease-in-out, box-shadow 0.2s ease-in-out',
+              backgroundColor: 'red',
+              '&:hover': {
+                backgroundColor: red[600],
+              },
+              '&:active': {
+                backgroundColor: red[700],
+                boxShadow: '0 0 20px 10px rgba(255, 0, 0, 0.5)',
+              }
+            }}
+          >
+            Log out
+          </Button>
+        </Box>
+      </Container>
     </>
   );
 }

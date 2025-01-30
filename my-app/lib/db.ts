@@ -1,8 +1,16 @@
 import sqlite3 from "sqlite3";
 import { open, Database } from 'sqlite'
 import { encrypt, decrypt } from "./crypto";
+import fs from 'fs/promises';
+import path from 'path';
 
 let db: Database | null = null;
+
+async function logAction(message: string) {
+  const timestamp = new Date().toISOString();
+  const logEntry = `[${timestamp}] ${message}\n`;
+  await fs.appendFile(path.join(process.cwd(), 'log.txt'), logEntry);
+}
 
 export async function getDb() {
   if (!db) {
@@ -69,6 +77,16 @@ export async function getDb() {
     PRIMARY KEY (account_id, playlist_id),
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
     FOREIGN KEY (playlist_id) REFERENCES playlists(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS chats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id1 INTEGER,
+    user_id2 INTEGER,
+    genre TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id1) REFERENCES accounts(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id2) REFERENCES accounts(id) ON DELETE SET NULL
     );`);
   }
   return db
@@ -100,6 +118,14 @@ export interface Playlist {
   created_at: string
 }
 
+export interface Chat {
+  id: number,
+  user_id1: number | null,
+  user_id2: number | null,
+  genre: string | null,
+  created_at: string
+}
+
 export async function createAccount(data: Omit<Account, 'id' | 'created_at'>): Promise<Account | undefined> {
   const db = await getDb()
   const encrypted_key = encrypt(data.api_key)
@@ -110,30 +136,37 @@ export async function createAccount(data: Omit<Account, 'id' | 'created_at'>): P
   );
   const account = await db.get<Account>('SELECT * FROM accounts WHERE id = ?', result.lastID)
   if (account) {
+    await logAction(`User of id ${result.lastID} created an account`)
     account.api_key = decrypt(account.api_key)
     account.password = decrypt(account.password)
-  } return account
+  }
+  return account
 }
 
 export async function deleteAccount(account_id: number) {
   const db = await getDb()
+  await logAction(`User of id ${account_id} deleted their account`)
   return db.run(`DELETE FROM accounts WHERE id = ?`, account_id)
 }
 
 export async function createSong(data: Omit<Song, 'id'>) {
   const db = await getDb()
-  return db.run(
+  const result = await db.run(
     `INSERT INTO songs (title, artist, music_url, thumbnail_url) VALUES (?, ?, ?, ?)`,
     [data.title, data.artist, data.music_url, data.thumbnail_url]
   );
+  await logAction(`New song created with id ${result.lastID}: ${data.title} by ${data.artist}`)
+  return result
 }
 
 export async function addGenresToSong(song_id: number, genres: string[]) {
   const db = await getDb()
-  await db.run(`DELETE FROM song_genres WHERE song_id = ?`, song_id)
+  const result = await db.run(`DELETE FROM song_genres WHERE song_id = ?`, song_id)
   for (const genre of genres) {
     await db.run(`INSERT INTO song_genres (song_id, genre) VALUES (?, ?)`, [song_id, genre])
   }
+  await logAction(`Genres ${genres} added to song id ${result.lastID}`)
+  return result
 }
 
 export async function getSongGenres(song_id: number): Promise<string[]> {
@@ -159,6 +192,7 @@ export async function likeSong(account_id: number, music_url: string) {
     )
   );
   await Promise.all(likePromises);
+  await logAction(`User ${account_id} liked song: ${music_url}`)
   return {
     liked_count: songs.length
   };
@@ -166,6 +200,7 @@ export async function likeSong(account_id: number, music_url: string) {
 
 export async function getLikedSongs(account_id: number): Promise<Song[]> {
   const db = await getDb();
+  await logAction(`Retrieving liked songs of account id ${account_id}`)
   return db.all<Song[]>(
     `SELECT * FROM songs
     JOIN liked_songs ON liked_songs.song_id = songs.id
@@ -183,6 +218,7 @@ export async function deleteLikedSong(account_id: number, music_url: string) {
     db.run('DELETE FROM liked_songs WHERE account_id = ? AND song_id = ?', [account_id, song.id])
   );
   await Promise.all(deletePromises);
+  await logAction(`User ${account_id} unliked song ${music_url}`)
   return { deleted_count: songs.length };
 }
 
@@ -192,6 +228,7 @@ export async function createPlaylist(data: Omit<Playlist, 'id' | 'created_at'>) 
   INSERT INTO playlists (name, account_id) VALUES (?, ?)`,
     [data.name, data.account_id]
   )
+  await logAction(`Created a new playlist for user ${data.account_id}`)
   return db.get(`SELECT * FROM playlists WHERE id = ?`, result.lastID)
 }
 
@@ -211,6 +248,7 @@ export async function addSongToPlaylist(playlist_id: number, music_url: string) 
   );
 
   await Promise.all(addPromises);
+  await logAction(`Added song ${music_url} to playlist id ${playlist_id}`)
   return { added_count: songs.length };
 }
 
@@ -230,11 +268,13 @@ export async function removeSongFromPlaylist(playlist_id: number, music_url: str
   );
 
   await Promise.all(removePromises);
+  await logAction(`Removed song ${music_url} from playlist id ${playlist_id}`)
   return { removed_count: songs.length };
 }
 
 export async function getAccountPlaylists(account_id: number): Promise<Playlist[]> {
   const db = await getDb();
+  await logAction(`Retrieving account playlists for user id ${account_id}`)
   return db.all<Playlist[]>(
     `SELECT * FROM playlists WHERE account_id = ?`, account_id
   )
@@ -242,6 +282,7 @@ export async function getAccountPlaylists(account_id: number): Promise<Playlist[
 
 export async function getPlaylistSongs(playlist_id: number): Promise<Song[]> {
   const db = await getDb();
+  await logAction(`Retrieving playlist songs for playlist id ${playlist_id}`)
   return db.all<Song[]>(
     `SELECT * FROM songs
     JOIN playlist_songs ON playlist_songs.song_id = songs.id
@@ -251,5 +292,62 @@ export async function getPlaylistSongs(playlist_id: number): Promise<Song[]> {
 
 export async function deletePlaylist(account_id: number, playlist_id: number) {
   const db = await getDb()
+  await logAction(`Deleting playlist ${playlist_id} for user ${account_id}`)
   return db.run(`DELETE FROM playlists WHERE id = ? AND account_id = ?`, [playlist_id, account_id])
+}
+
+export async function createChat(): Promise<Chat | undefined> {
+  const db = await getDb()
+  const result = await db.run(
+    `INSERT INTO chats (user_id1, user_id2, genre) VALUES (NULL, NULL, NULL)`
+  );
+  await logAction(`Created a new chat with null fields`)
+  return db.get<Chat>('SELECT * FROM chats WHERE id = ?', result.lastID)
+}
+
+export async function addUserToChat(chat_id: number, user_id: number): Promise<Chat | undefined> {
+  const db = await getDb()
+  const chat = await db.get<Chat>('SELECT * FROM chats WHERE id = ?', chat_id)
+
+  if (!chat) {
+    throw new Error('Chat not found')
+  }
+
+  if (chat.user_id1 === null) {
+    await db.run(
+      `UPDATE chats SET user_id1 = ? WHERE id = ?`,
+      [user_id, chat_id]
+    )
+  } else if (chat.user_id2 === null) {
+    await db.run(
+      `UPDATE chats SET user_id2 = ? WHERE id = ?`,
+      [user_id, chat_id]
+    )
+  } else {
+    throw new Error('Chat is full')
+  }
+  await logAction(`Added user ${user_id} to chat ${chat_id}`)
+  return db.get<Chat>('SELECT * FROM chats WHERE id = ?', chat_id)
+}
+
+export async function addGenreToChat(chat_id: number, genre: string): Promise<Chat | undefined> {
+  const db = await getDb()
+  const chat = await db.get<Chat>('SELECT * FROM chats WHERE id = ?', chat_id)
+
+  if (!chat) {
+    throw new Error('Chat not found')
+  }
+
+  await db.run(
+    `UPDATE chats SET genre = ? WHERE id = ?`,
+    [genre, chat_id]
+  )
+  await logAction(`Added genre ${genre} to chat ${chat_id}`)
+  return db.get<Chat>('SELECT * FROM chats WHERE id = ?', chat_id)
+}
+
+export async function deleteChat(chat_id: number) {
+  const db = await getDb()
+  await logAction(`Deleted chat ${chat_id}`)
+  return db.run(`DELETE FROM chats WHERE id = ?`, chat_id)
 }

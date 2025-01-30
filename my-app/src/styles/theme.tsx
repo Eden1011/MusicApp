@@ -1,7 +1,7 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 import { blue } from '@mui/material/colors';
 
-const darkTheme = createTheme({
+let darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
@@ -20,13 +20,16 @@ const darkTheme = createTheme({
   },
   components: {
     MuiCssBaseline: {
-      styleOverrides: {
-        body: {
-          backgroundImage: 'radial-gradient(circle, black 0%, rgba(1,20,60,1) 100%)',
-          backgroundAttachment: 'fixed',
-          minHeight: '100vh',
-        },
-      },
+      styleOverrides: `
+        body {
+          background-image: radial-gradient(circle, black 0%, rgba(1,20,60,1) 100%);
+          background-attachment: fixed;
+          min-height: 100vh;
+          overflow-x: hidden;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+        }
+      `,
     },
     MuiButton: {
       styleOverrides: {
@@ -52,6 +55,9 @@ const darkTheme = createTheme({
           borderBottomWidth: '2px',
           borderBottomColor: 'rgba(30, 30, 30, 0.5)',
           backdropFilter: 'blur(50px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1100,
         },
       },
     },
@@ -61,7 +67,6 @@ const darkTheme = createTheme({
           '&:active': {
             boxShadow: `0 0 31px black, 0 0 8px black`,
           },
-
           '& .MuiOutlinedInput-root': {
             borderRadius: '8px',
             backgroundColor: 'rgba(0, 0, 0, 0.2)',
@@ -75,7 +80,31 @@ const darkTheme = createTheme({
         }
       }
     },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          width: '80%',
+          '@media (min-width:600px)': {
+            width: '60%',
+          },
+        }
+      }
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          margin: '16px',
+          width: 'calc(100% - 32px)',
+          '@media (min-width:600px)': {
+            margin: '32px',
+            width: 'auto',
+          },
+        }
+      }
+    }
   },
 });
+
+darkTheme = responsiveFontSizes(darkTheme);
 
 export default darkTheme;

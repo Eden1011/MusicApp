@@ -1,7 +1,8 @@
 import { Box, TextField } from '@mui/material';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useMemo, useEffect } from 'react';
 import Fuse from 'fuse.js';
 import { SearchResultProps } from './SearchResults';
+import { useFormik } from 'formik';
 
 interface InputWatchSearchProps {
   text: string;
@@ -10,8 +11,6 @@ interface InputWatchSearchProps {
 }
 
 export default function InputWatchSearch({ text, songs, setFilteredSongs }: InputWatchSearchProps) {
-  const [query, setQuery] = useState('');
-
   const fuse = useMemo(() => {
     const options = Array.isArray(songs) && songs.length > 0 && typeof songs[0] === 'string'
       ? { keys: ['item'] }
@@ -28,7 +27,16 @@ export default function InputWatchSearch({ text, songs, setFilteredSongs }: Inpu
     });
   }, [songs]);
 
-  const handleSearch = useCallback((searchQuery: string) => {
+  const formik = useFormik({
+    initialValues: {
+      query: ''
+    },
+    onSubmit: () => { },
+  });
+
+  useEffect(() => {
+    const searchQuery = formik.values.query;
+
     if (!searchQuery.trim()) {
       setFilteredSongs(songs);
       return;
@@ -39,11 +47,7 @@ export default function InputWatchSearch({ text, songs, setFilteredSongs }: Inpu
       typeof songs[0] === 'string' ? result.item.item : result.item
     );
     setFilteredSongs(filteredItems);
-  }, [fuse, songs, setFilteredSongs]);
-
-  useEffect(() => {
-    handleSearch(query);
-  }, [query, handleSearch]);
+  }, [formik.values.query, songs, fuse, setFilteredSongs]);
 
   return (
     <Box sx={{
@@ -60,12 +64,14 @@ export default function InputWatchSearch({ text, songs, setFilteredSongs }: Inpu
       mx: 'auto'
     }}>
       <TextField
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        name="query"
+        value={formik.values.query}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
         placeholder={text}
         sx={{
           '& .MuiOutlinedInput-root': {
-            ...(query === '' && {
+            ...(formik.values.query === '' && {
               '&.Mui-focused fieldset': {
                 borderColor: 'red',
                 borderWidth: '2px',

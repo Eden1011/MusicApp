@@ -7,11 +7,6 @@ import {
   Card,
   CardContent,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   ThemeProvider,
   CssBaseline,
   Button
@@ -27,6 +22,7 @@ import SongCard from '../components/SongCard';
 import { useRouter } from 'next/navigation';
 import Popup from '../components/Popup';
 import BoxYoutubeError from '../components/BoxYoutubeError';
+import PlaylistDialog from '../components/PlaylistDialog';
 
 type Song = {
   id: number;
@@ -51,7 +47,6 @@ export default function LibraryPage() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [playlistSongs, setPlaylistSongs] = useState<Song[]>([]);
   const [openNewPlaylistDialog, setOpenNewPlaylistDialog] = useState(false);
-  const [newPlaylistName, setNewPlaylistName] = useState('');
   const [account_id, setAccountId] = useState<string | undefined>('');
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
@@ -98,9 +93,9 @@ export default function LibraryPage() {
     }
   };
 
-  const handleCreatePlaylist = async () => {
+  const handleCreatePlaylist = async (name: string) => {
     const accountId = sessionStorage.getItem('account_id');
-    if (!accountId || !newPlaylistName.trim()) return;
+    if (!accountId || !name.trim()) return;
 
     try {
       const response = await fetch('/api/playlist', {
@@ -109,7 +104,7 @@ export default function LibraryPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: newPlaylistName,
+          name: name,
           account_id: parseInt(accountId),
         }),
       });
@@ -118,7 +113,7 @@ export default function LibraryPage() {
         const data = await response.json()
         const newPlaylist: Playlist = {
           id: parseInt(data.lastId),
-          name: newPlaylistName,
+          name: name,
           account_id: parseInt(accountId),
           created_at: new Date().toISOString()
         };
@@ -126,8 +121,6 @@ export default function LibraryPage() {
         const updatedPlaylists = [...playlists, newPlaylist];
         setPlaylists(updatedPlaylists);
         sessionStorage.setItem('account_playlists', JSON.stringify(updatedPlaylists));
-
-        setNewPlaylistName('');
         setOpenNewPlaylistDialog(false);
       }
     } catch (error) {
@@ -234,7 +227,11 @@ export default function LibraryPage() {
               }
             }}
           >
-            {selectedPlaylist ? selectedPlaylist.name : 'My Playlists'}
+            {selectedPlaylist ?
+              (selectedPlaylist.name.length > 20 ?
+                selectedPlaylist.name.substring(0, 20) + '...' :
+                selectedPlaylist.name) :
+              'My Playlists'}
           </Typography>
           {selectedPlaylist ? (
             <IconButton onClick={handleSharePlaylist}>
@@ -265,15 +262,15 @@ export default function LibraryPage() {
             </Box>
           </Box>
         ) : (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'flex-start' }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
             {playlists.map((playlist) => (
-              <Box key={`playlist-${playlist.id}`} sx={{ width: '300px' }}>
+              <Box key={`playlist-${playlist.id}`} sx={{ width: 'auto' }}>
                 <Card sx={{
-                  width: '100%',
+                  width: '125px',
                   minHeight: '120px',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
+                  justifyContent: 'flex-start',
                   backgroundColor: 'rgba(30, 30, 30, 0.6)',
                   borderRadius: '8px',
                   transition: 'transform 0.2s, box-shadow 0.2s',
@@ -287,13 +284,13 @@ export default function LibraryPage() {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    padding: '16px'
+                    padding: '8px'
                   }}>
                     <Typography variant="h6" sx={{
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
-                    }}>{`${playlist.name}`}</Typography>
+                    }}>{`${playlist.name.length > 5 ? playlist.name.substring(0, 5) + '...' : playlist.name}`}</Typography>
                     <Box mt={1} sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -301,17 +298,17 @@ export default function LibraryPage() {
                     }}>
                       <OutlinedButton
                         key={`view-btn-${playlist.id}`}
-                        value='View Songs'
+                        value='View'
                         onClick={() => setSelectedPlaylist(playlist)}
-                        height={40}
-                        width={120}
+                        height={30}
+                        width={100}
                       />
                       <IconButton
                         key={`delete-btn-${playlist.id}`}
                         onClick={() => handleDeletePlaylist(playlist.id)}
                         color="error"
                         sx={{
-                          marginLeft: '8px',
+                          marginLeft: '5px',
                           '&:hover': {
                             backgroundColor: 'rgba(255, 0, 0, 0.1)'
                           }
@@ -336,64 +333,37 @@ export default function LibraryPage() {
       <main>
         <Navbar />
         <BoxBackground>
-          <Box sx={{ display: 'flex', gap: 3 }}>
-            <Box sx={{ width: '15%', minWidth: '200px', flexShrink: 0 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <OutlinedButton
-                  value="Liked Songs"
-                  onClick={() => {
-                    setSelectedView('liked');
-                    setSelectedPlaylist(null);
-                  }}
-                />
-                <OutlinedButton
-                  value="My Playlists"
-                  onClick={() => {
-                    setSelectedView('playlists');
-                    setSelectedPlaylist(null);
-                  }}
-                />
-              </Box>
-            </Box>
-            <Box sx={{ flexGrow: 1 }}>
-              {renderContent()}
-            </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, marginBottom: '1rem' }}>
+            <OutlinedButton
+              value="Liked Songs"
+              onClick={() => {
+                setSelectedView('liked');
+                setSelectedPlaylist(null);
+              }}
+              width="50%"
+            />
+            <OutlinedButton
+              value="My Playlists"
+              onClick={() => {
+                setSelectedView('playlists');
+                setSelectedPlaylist(null);
+              }}
+              width="50%"
+            />
+          </Box>
+
+          <Box sx={{ width: '15%', minWidth: '200px', flexShrink: 0 }}>
+          </Box>
+          <Box sx={{ flexGrow: 1 }}>
+            {renderContent()}
           </Box>
         </BoxBackground>
 
-        <Dialog open={openNewPlaylistDialog} onClose={() => setOpenNewPlaylistDialog(false)}>
-          <DialogTitle>Create New Playlist</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Playlist Name"
-              fullWidth
-              variant="standard"
-              value={newPlaylistName}
-              onChange={(e) => setNewPlaylistName(e.target.value)}
-              sx={{
-                '&:active': {
-                  boxShadow: 'none',
-                },
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '0',
-                  backgroundColor: 'transparent',
-                  '&.Mui-focused': {
-                    '& fieldset': {
-                      borderWidth: '0',
-                      borderColor: 'transparent'
-                    }
-                  }
-                }
-              }}
-            />
-          </DialogContent>
-          <DialogActions>
-            <OutlinedButton value='Cancel' onClick={() => setOpenNewPlaylistDialog(false)} />
-            <OutlinedButton value='Create' onClick={handleCreatePlaylist} />
-          </DialogActions>
-        </Dialog>
+        <PlaylistDialog
+          open={openNewPlaylistDialog}
+          onClose={() => setOpenNewPlaylistDialog(false)}
+          onCreatePlaylist={handleCreatePlaylist}
+        />
         <Popup
           message="Playlist link copied to clipboard"
           open={isPopupOpen}
