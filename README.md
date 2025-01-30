@@ -1,42 +1,130 @@
-# Projekt
-Aplikacja do zarzadzania muzyka, korzystajaca z API Google Cloud dla Youtube.
+# Krzysztof Glowka 291692 Grupa 4
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Music Streaming Application
 
-# Opis: 
-Aplikacja muzyczna, którą tworzymy, jest nowoczesną platformą do odkrywania, słuchania i zarządzania muzyką. Umożliwia użytkownikom logowanie się za pomocą e-maila, hasła lub kont społecznościowych, takich jak Facebook i Google, zapewniając szybki i bezproblemowy dostęp. Po rejestracji, weryfikowanej przez e-mail, użytkownicy mogą przeglądać, wyszukiwać i odtwarzać różnorodne utwory, albumy, artystów i playlisty. Aplikacja oferuje zaawansowane opcje filtrowania wyników wyszukiwania, pozwalając dostosować treści do preferencji użytkownika według kategorii, gatunków muzycznych czy nastroju. Użytkownicy mają możliwość personalizowania swojego doświadczenia muzycznego przez dodawanie ulubionych utworów do biblioteki, tworzenie, edytowanie i usuwanie własnych playlist, a także udostępnianie ich innym. Funkcje odtwarzacza, takie jak odtwarzanie, pauza, przewijanie i regulacja głośności, wzbogacone są o tryb losowy, powtarzanie i zarządzanie kolejką odtwarzania. Aplikacja zapewnia również wizualne i tekstowe uzupełnienia w postaci wyświetlania okładek albumów, tekstów piosenek i informacji o artystach. Użytkownicy mogą dostosować aplikację do swoich potrzeb, wybierając język interfejsu oraz edytując profil, ustawienia prywatności i preferencje powiadomień. Oferujemy również możliwość usunięcia konta dla zapewnienia pełnej kontroli nad danymi osobowymi.
+A Next.js application for music streaming with features including playlist management, chat rooms, YouTube integration, and genre-based music discovery.
 
-## Getting Started
+## Requirements
 
-First, run the development server:
+- Node.js (v18 or higher)
+- NPM
+- SQLite3
 
+## Installation
+
+1. Clone the repository
+2. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Running the Application
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Start the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Start WebSocket chat server:
+```bash
+npm run dev:chat
+```
 
-## Learn More
+The application will be available at `http://localhost:3000`
 
-To learn more about Next.js, take a look at the following resources:
+## Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Authentication
+- Account creation and management
+- API key generation and validation
+- Session-based authentication
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Music Streaming
+- YouTube integration for music playback
+- Genre-based music discovery
+- Custom video player with playlist support
+- Search functionality for songs and artists
 
-## Deploy on Vercel
+### Social Features
+- Real-time chat rooms
+- Genre-specific chat rooms
+- User presence tracking
+- Chat history
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Library Management
+- Create and manage playlists
+- Like/unlike songs
+- Add songs to playlists
+- Browse by genre
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API Endpoints
+
+### Authentication
+- `POST /api/login` - User authentication
+- `GET /api/account/key` - Get API key
+- `PATCH /api/account/description` - Update account description
+
+### Music
+- `GET /api/songs/all` - Get all available songs
+- `GET /api/youtube/search` - Search YouTube for songs
+- `GET /api/genre/all` - Get all music genres
+
+### Chat
+- `GET /api/chat/available` - Get available chat rooms
+- `GET /api/chat/genre` - Get genre-specific chat rooms
+- `GET /api/chat/user` - Get user chat history
+
+### Playlists
+- `GET /api/playlist/user` - Get user playlists
+- `POST /api/playlist/song` - Add song to playlist
+- `DELETE /api/playlist` - Delete playlist
+
+## Project Structure
+
+```text
+src/
+  └── app/
+      ├── account/          # Account management pages
+      ├── api/              # API route handlers
+      │   ├── account/      # Account management endpoints
+      │   ├── ads/          # Advertisement system
+      │   ├── chat/         # Chat system endpoints
+      │   ├── genre/        # Genre management
+      │   ├── likes/        # Song likes system
+      │   ├── playlist/     # Playlist management
+      │   ├── songs/        # Song management
+      │   └── youtube/      # YouTube integration
+      ├── chat/             # Chat interface pages
+      ├── components/       # Reusable React components
+      ├── library/          # Music library pages
+      ├── playlist/         # Playlist pages
+      ├── search/           # Search functionality
+      └── watch/            # Video player pages
+hooks/                      # Custom React hook (for session management)
+styles/                     # Theme configuration
+```
+
+## Components
+
+### UI Components
+- `AdComponent` - Advertisement display
+- `BoxBackground` - Styled container
+- `CallsLeft` - API usage tracking
+- `InputWatchSearch` - Search input for videos
+- `SearchResults` - Search results display
+- `VideoPlayer` - Custom video player
+
+### Functional Components
+- `Navbar` - Navigation and user controls
+- `Login` - Authentication form
+- `Popup` - Modal notifications
+- `SongCard` - Song information display
+
+## Tech Stack
+
+- Next.js 13+ (App Router)
+- React 18
+- TypeScript
+- Material UI
+- SQLite3
+- WebSocket (for chat)
