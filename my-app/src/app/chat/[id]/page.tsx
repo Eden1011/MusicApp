@@ -96,7 +96,10 @@ export default function ChatRoom() {
             chatId: params.id,
             userId: storedId,
             userName: storedName
-          }
+          },
+          transports: ['websocket', 'polling'],
+          reconnection: true,
+          reconnectionAttempts: 5
         });
 
         if (!connectedUsers.has(storedId)) {

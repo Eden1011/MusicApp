@@ -4,8 +4,8 @@ import { createServer } from 'http';
 const httpServer = createServer();
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
+    origin: "*",
+    methods: ["GET", "POST"],
   }
 });
 
@@ -24,6 +24,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = 3001;
-httpServer.listen(PORT, () => {
+const HOST = "0.0.0.0"
+httpServer.listen(PORT, HOST, () => {
   console.log(`Socket.IO server running on port ${PORT}`);
 });
